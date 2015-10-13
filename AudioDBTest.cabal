@@ -1,0 +1,17 @@
+name: AudioDBTest
+version: 0.1
+synopsis: A test framework for the audioDB system
+homepage: https://github.com/TransformingMusicology/audioDB-test-framework
+author: Richard Lewis
+license: GPL
+copyright: (C) 2015 Richard Lewis
+build-type: Simple
+cabal-version: >= 1.8
+
+executable adbtest
+  build-depends: base, AudioDB
+  main-is: Main.hs
+  hs-source-dirs: src
+  other-modules: AudioDB.Test.Types
+  ghc-options: -Wall
+  extra-libraries: audioDB
