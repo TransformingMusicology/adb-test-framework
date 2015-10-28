@@ -1,5 +1,4 @@
 identifier: "Example 1"
-evaluation: "distance"
 queries:
   - db:
       filename: "example1_chroma.adb"
@@ -13,6 +12,7 @@ queries:
       length: 10
       pointNN: 1
     specifiedBy: "User 1"
+    evaluation: "distance"
     requiredResults:
       - key: "Track 1"
         distance: 0.0
@@ -42,6 +42,7 @@ queries:
       length: 10
       pointNN: 1
     specifiedBy: "User 1"
+    evaluation: "distance"
     requiredResults:
       - key: "Track 1"
         distance: 0.0

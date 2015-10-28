@@ -79,7 +79,12 @@ data Query = Query {
     dq_db              :: Database
   , dq_query           :: QueryOpts
   , dq_specifiedBy     :: String
-  , dq_requiredResults :: Rankings } deriving (Eq, Show)
+  , dq_requiredResults :: [Ranking]
+  , dq_evaluation      :: Evaluation } deriving (Eq, Show)
+
+data Evaluation = MatchDistances
+                | MatchOrder
+                deriving (Eq, Show)
 
 data Database = Database {
     db_fileName    :: FilePath
@@ -94,20 +99,15 @@ instance Eq Database where
 instance Show Database where
   show (Database { db_fileName = fn }) = fn
 
-data Rankings = Rankings {
+data Ranking = Ranking {
     rk_key      :: Key
   , rk_distance :: Double
   , rk_start    :: Int
   , rk_length   :: Int } deriving (Eq, Show)
 
-data Evaluation = MatchDistances
-                | MatchOrder
-                deriving (Eq, Show)
-
 data Test = Test {
     t_identifier :: String
-  , t_queries    :: [Query]
-  , t_evaluation :: Evaluation } deriving (Eq, Show)
+  , t_queries    :: [Query] } deriving (Eq, Show)
 
 data ExecutionMethod = Serial
                      | Parallel
