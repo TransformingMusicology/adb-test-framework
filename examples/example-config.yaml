@@ -1,0 +1,53 @@
+identifier: "Example 1"
+evaluation: "distance"
+queries:
+  - db:
+      filename: "example1_chroma.adb"
+      feature: "chroma"
+      framesize: 1024
+      power: true
+    query:
+      type: "sequence"
+      key: "Track 1"
+      start: 0
+      length: 10
+      pointNN: 1
+    specifiedBy: "User 1"
+    requiredResults:
+      - key: "Track 1"
+        distance: 0.0
+        start: 0
+        length: 10
+      - key: "Track 1"
+        distance: 0.1
+        start: 50
+        length: 10
+      - key: "Track 5"
+        distance: 0.15
+        start: 30
+        length: 10
+      - key: "Track 3"
+        distance: 0.22
+        start: 75
+        length: 10
+  - db:
+      filename: "example1_mfcc.adb"
+      feature: "mfcc"
+      framesize: 1024
+      power: false
+    query:
+      type: "sequence"
+      key: "Track 1"
+      start: 0
+      length: 10
+      pointNN: 1
+    specifiedBy: "User 1"
+    requiredResults:
+      - key: "Track 1"
+        distance: 0.0
+        start: 0
+        length: 10
+      - key: "Track 7"
+        distance: 0.7
+        start: 15
+        length: 10
