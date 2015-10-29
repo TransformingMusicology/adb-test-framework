@@ -3,7 +3,7 @@ queries:
   - db:
       filename: "example1_chroma.adb"
       feature: "chroma"
-      framesize: 1024
+      framesPerSec: 1024
       power: true
     query:
       type: "sequence"
@@ -33,7 +33,7 @@ queries:
   - db:
       filename: "example1_mfcc.adb"
       feature: "mfcc"
-      framesize: 1024
+      framesPerSec: 1024
       power: false
     query:
       type: "sequence"
