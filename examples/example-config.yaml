@@ -1,6 +1,7 @@
 identifier: "Example 1"
 queries:
-  - db:
+  - identifier: "ex1_chroma_track1"
+    db:
       filename: "example1_chroma.adb"
       feature: "chroma"
       framesPerSec: 1024
@@ -30,7 +31,8 @@ queries:
         distance: 0.22
         start: 75
         length: 10
-  - db:
+  - identifier: "example1_mfcc_track1"
+    db:
       filename: "example1_mfcc.adb"
       feature: "mfcc"
       framesPerSec: 1024

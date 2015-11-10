@@ -119,7 +119,8 @@ data Query = Query {
 
 instance FromJSON Query where
   parseJSON (Object q) = Query
-    <$> q .: "db"
+    <$> q .: "identifier"
+    <*> q .: "db"
     <*> q .: "query"
     <*> q .: "specifiedBy"
     <*> q .: "requiredResults"
