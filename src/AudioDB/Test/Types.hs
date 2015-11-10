@@ -200,8 +200,13 @@ data ExecutionMethod = Serial
                      | Parallel
                      deriving (Eq, Show)
 
+data QueryResult = QueryResult {
+    qr_query_id :: String
+  , qr_results  :: [Ranking] } deriving (Eq, Show)
+
 data TestRun = TestRun {
     tr_test        :: Test
+  , tr_results     :: [QueryResult]
   , tr_startTime   :: DateTime
   , tr_endTime     :: DateTime
   , tr_libaudioDBv :: String
