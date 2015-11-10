@@ -111,11 +111,12 @@ instance FromJSON Distance where
   parseJSON d = error $ "Invalid distance measure type: " ++ (show d)
 
 data Query = Query {
-    dq_db              :: Database
-  , dq_query           :: QueryOpts
-  , dq_specifiedBy     :: String
-  , dq_requiredResults :: [Ranking]
-  , dq_evaluation      :: Evaluation } deriving (Eq, Show)
+    q_identifier      :: String
+  , q_db              :: Database
+  , q_query           :: QueryOpts
+  , q_specifiedBy     :: String
+  , q_requiredResults :: [Ranking]
+  , q_evaluation      :: Evaluation } deriving (Eq, Show)
 
 instance FromJSON Query where
   parseJSON (Object q) = Query
