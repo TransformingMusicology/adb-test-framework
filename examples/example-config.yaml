@@ -4,7 +4,8 @@ queries:
     db:
       filename: "example1_chroma.adb"
       feature: "chroma"
-      framesPerSec: 1024
+      sampleRate: 44100
+      stepSize: 2048
       power: true
     query:
       type: "sequence"
@@ -35,7 +36,8 @@ queries:
     db:
       filename: "example1_mfcc.adb"
       feature: "mfcc"
-      framesPerSec: 1024
+      sampleRate: 44100
+      stepSize: 2048
       power: false
     query:
       type: "sequence"

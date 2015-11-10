@@ -153,10 +153,14 @@ instance FromJSON Database where
   parseJSON (Object db) = do
     fn      <- db .: "filename"
     feature <- db .: "feature"
-    fps     <- db .: "framesPerSec"
+    sr      <- db .: "sampleRate"
+    ss      <- db .: "stepSize"
     power   <- db .: "power"
 
-    let frameSize   = (\f -> (realToFrac f) / fps)
+    let fps         = sampleRate / stepSize
+        sampleRate  = fromIntegral (sr :: Int)
+        stepSize    = fromIntegral (ss :: Int)
+        frameSize   = (\f -> (realToFrac f) / fps)
         featureRate = (\s -> ceiling $ s * fps)
 
     return $ Database { db_fileName    = fn
