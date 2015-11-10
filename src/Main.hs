@@ -44,7 +44,7 @@ opts :: ParserInfo TestConfig
 opts = info ( helper <*> config )
        ( fullDesc
          <> progDesc "A test framework for audioDB"
-         <> header "adb-test - a test framework for audioDB" )
+         <> header "adbtest - a test framework for audioDB" )
 
 execTest :: TestConfig -> IO ()
 execTest (TestConfig f dry) =

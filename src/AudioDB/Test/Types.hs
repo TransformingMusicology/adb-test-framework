@@ -88,7 +88,7 @@ data QueryConf = QueryConf {
   , qc_relativeThreshold   :: Double
   , qc_durationRatio       :: Double
   , qc_queryHopSize        :: Int
-  , qc_datumHopSzie        :: Int } deriving (Eq, Show)
+  , qc_datumHopSize        :: Int } deriving (Eq, Show)
 
 type Key = String
 
