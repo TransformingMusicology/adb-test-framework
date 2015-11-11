@@ -24,7 +24,6 @@ module AudioDB.Test.Types where
 
 import AudioDB
 import Data.DateTime
-import System.Info
 import Control.Applicative
 import Data.Aeson
 
