@@ -27,6 +27,7 @@ import ADB
 import Foreign.C.String
 import Data.DateTime
 import System.Info as Sys
+import Data.List (sortBy)
 
 configurePointQuery :: QueryConf -> ADBDatumPtr -> IO QueryAllocator
 configurePointQuery conf qDatum = return $
@@ -97,20 +98,45 @@ runQuery q = withExistingROAudioDB dbFileName withDB
       qf      <- qFunc
       results <- execQuery adb qf
 
-      let rankings = extractRankings frameSize results
+      let rankings        = sortBy cmpDistance (extractRankings frameSize results)
+          cmpDistance a b = compare (rk_distance a) (rk_distance b)
+          fMeasure        = evaluate rankings q
 
       return QueryResult { qr_query_id = q_identifier q
-                         , qr_results  = rankings }
+                         , qr_results  = rankings
+                         , qr_fMeasure = fMeasure }
     withDB Nothing = error $ "Could not open database " ++ dbFileName
 
 extractRankings :: FrameSize -> ADBQueryResults -> [Ranking]
-extractRankings frameSize r = map resToRank (query_results_results r)
+extractRankings framesToSecs r = map resToRank (query_results_results r)
   where
     resToRank (ADBResult { result_ikey = key, result_ipos = pos, result_dist = dist }) =
       Ranking { rk_key = key
               , rk_distance = dist
-              , rk_start = (frameSize pos)
-              , rk_length = 0.0 }
+              , rk_start = (framesToSecs pos)
+              , rk_length = 0.0
+              , rk_nsequence = Nothing
+              , rk_distThresh = Nothing
+              , rk_startThresh = Nothing
+              , rk_lengthThresh = Nothing }
+
+evaluate :: [Ranking] -> Query -> (Accuracy, Precision, Recall)
+evaluate rs q@(Query { q_evaluation = MatchDistances }) = (accuracy, precision, recall)
+  where
+    requiredResults = (q_requiredResults q)
+    positiveResults = zipWith (\a b -> if a == b then Just a else Nothing) rs requiredResults
+    tPR = trace ("positiveResults: " ++ (show positiveResults)) positiveResults
+    negativeResults = zipWith (\a b -> if a == b then Just a else Nothing) requiredResults rs
+    trueNegatives = [] -- What? the number of possible sequences in the database that are not requiredResults?
+    falseNegatives = filter (== Nothing) negativeResults
+    truePositives = filter (/= Nothing) positiveResults
+    falsePositives = filter (== Nothing) positiveResults
+    fracLen = realToFrac . length
+    accuracy = ((fracLen trueNegatives) + (fracLen truePositives)) / (fracLen requiredResults)
+    precision = (fracLen truePositives) / (fracLen truePositives) + (fracLen falsePositives)
+    recall = (fracLen truePositives) / (fracLen truePositives) + (fracLen falseNegatives)
+
+evaluate rs q@(Query { q_evaluation = MatchOrder }) = undefined
 
 saveRun :: TestRun -> IO ()
 saveRun = putStrLn . show

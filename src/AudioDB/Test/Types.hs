@@ -127,6 +127,7 @@ instance FromJSON Query where
     <*> q .: "evaluation"
   parseJSON _ = error "Could not parse query."
 
+-- FIXME Consider adding things like FMeasure as evaluation types
 data Evaluation = MatchDistances
                 | MatchOrder
                 deriving (Eq, Show)
@@ -172,17 +173,58 @@ instance FromJSON Database where
   parseJSON _ = error "Could not parse database specification."
 
 data Ranking = Ranking {
-    rk_key      :: Key
-  , rk_distance :: Double
-  , rk_start    :: Seconds
-  , rk_length   :: Seconds } deriving (Eq, Show)
+    rk_key          :: Key
+  , rk_nsequence    :: Maybe Int
+  , rk_distance     :: Double
+  , rk_distThresh   :: Maybe Double
+  , rk_start        :: Seconds
+  , rk_startThresh  :: Maybe Seconds
+  , rk_length       :: Seconds
+  , rk_lengthThresh :: Maybe Seconds} deriving (Show)
+
+inMaybeRange :: (Num a, Ord a) => (a, Maybe a) -> (a, Maybe a) -> Bool
+inMaybeRange (a, Nothing)     (b, Nothing)     = a == b
+inMaybeRange (a, Just aRange) (b, Nothing)     = b >= (a - aRange) && b <= (a + aRange)
+inMaybeRange (a, Nothing)     (b, Just bRange) = a >= (b - bRange) && a <= (b + bRange)
+inMaybeRange (a, Just aRange) (b, Just bRange) = (a >= (b - bRange) && a <= (b + bRange))
+                                                 || (b >= (a - aRange) && b <= (a + aRange))
+
+instance Eq Ranking where
+  (==) (Ranking { rk_key = aKey
+                , rk_nsequence = aNSeq
+                , rk_distance = aDist
+                , rk_distThresh = aDistThresh
+                , rk_start = aStart
+                , rk_startThresh = aStartThresh
+                , rk_length = aLen
+                , rk_lengthThresh = aLenThresh})
+    (Ranking { rk_key = bKey
+             , rk_nsequence = bNSeq
+             , rk_distance = bDist
+             , rk_distThresh = bDistThresh
+             , rk_start = bStart
+             , rk_startThresh = bStartThresh
+             , rk_length = bLen
+             , rk_lengthThresh = bLenThresh})
+    | aKey /= bKey = False
+    | (aStart, aStartThresh) `inMaybeRange` (bStart, bStartThresh) &&
+      (aLen, aLenThresh) `inMaybeRange` (bLen, bLenThresh) &&
+      (aDist, aDistThresh) `inMaybeRange` (bDist, bDistThresh) = True
+    | otherwise = False
+
+instance Ord Ranking where
+  compare a b = undefined
 
 instance FromJSON Ranking where
   parseJSON (Object r) = Ranking
-    <$> r .: "key"
-    <*> r .: "distance"
-    <*> r .: "start"
-    <*> r .: "length"
+    <$> r .:  "key"
+    <*> r .:? "nSequence"         .!= Nothing
+    <*> r .:  "distance"
+    <*> r .:? "distanceThreshold" .!= Nothing
+    <*> r .:  "start"
+    <*> r .:? "startThreshold"    .!= Nothing
+    <*> r .:  "length"
+    <*> r .:? "lengthThreshold"   .!= Nothing
   parseJSON _ = error "Could not parse ranking."
 
 data Test = Test {
@@ -199,9 +241,16 @@ data ExecutionMethod = Serial
                      | Parallel
                      deriving (Eq, Show)
 
+type Accuracy = Double
+type Precision = Double
+type Recall = Double
+
+-- FIXME How can we make this more polymorphic to accommodate
+-- different kinds of Evaluation?
 data QueryResult = QueryResult {
     qr_query_id :: String
-  , qr_results  :: [Ranking] } deriving (Eq, Show)
+  , qr_results  :: [Ranking]
+  , qr_fMeasure :: (Accuracy, Precision, Recall) } deriving (Eq, Show)
 
 data TestRun = TestRun {
     tr_test        :: Test
