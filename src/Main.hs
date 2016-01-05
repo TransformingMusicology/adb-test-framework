@@ -22,8 +22,8 @@ module Main where
 
 import AudioDB.Test
 import AudioDB.Test.Types
-import Options.Applicative
 import Data.Yaml (decodeFileEither)
+import Options.Applicative
 
 data TestConfig = TestConfig {
     configFile :: String

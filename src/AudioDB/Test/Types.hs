@@ -22,10 +22,11 @@
 
 module AudioDB.Test.Types where
 
-import AudioDB
-import Data.DateTime
 import Control.Applicative
 import Data.Aeson
+import Data.DateTime
+import Sound.Audio.Database
+import Sound.Audio.Database.Types
 
 data QueryOpts = QueryOpts {
     qo_type              :: QueryType
@@ -39,7 +40,8 @@ data QueryOpts = QueryOpts {
   , qo_absoluteThreshold :: Maybe Double
   , qo_relativeThreshold :: Maybe Double
   , qo_unitNorming       :: Bool
-  , qo_distance          :: Distance } deriving (Eq, Show)
+  , qo_distance          :: Distance
+  , qo_rotations         :: Maybe [Int] } deriving (Eq, Show)
 
 instance FromJSON QueryOpts where
   parseJSON (Object qo) = QueryOpts
@@ -55,6 +57,7 @@ instance FromJSON QueryOpts where
     <*> qo .:? "relativeThreshold" .!= Nothing
     <*> qo .:? "unitNorming"       .!= False
     <*> qo .:? "distanceMeasure"   .!= Euclidean
+    <*> qo .:? "rotations"         .!= Nothing
   parseJSON _ = error "Could not parse query options."
 
 data QueryType = PointQuery
@@ -87,7 +90,8 @@ data QueryConf = QueryConf {
   , qc_relativeThreshold   :: Double
   , qc_durationRatio       :: Double
   , qc_queryHopSize        :: Int
-  , qc_datumHopSize        :: Int } deriving (Eq, Show)
+  , qc_dbHopSize           :: Int
+  , qc_rotations           :: [Int] } deriving (Eq, Show)
 
 type Key = String
 
