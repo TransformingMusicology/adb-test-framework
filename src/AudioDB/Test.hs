@@ -40,7 +40,7 @@ configureTrackQuery :: QueryConf -> ADBDatum -> (QueryAllocator, Maybe QueryTran
 configureTrackQuery conf@( QueryConf { qc_rotations = [] }) qDatum =
   (mkTrackQuery qDatum (qc_ntracks conf), Nothing, Nothing)
 
-configureTrackQuery conf@( QueryConf { qc_rotation = (_:_) }) qDatum = undefined
+configureTrackQuery conf@( QueryConf { qc_rotations = (_:_) }) qDatum = undefined
 
 configureSequenceQuery :: QueryConf -> ADBDatum -> FeatureRate -> FrameSize -> (QueryAllocator, Maybe QueryTransformer, Maybe QueryComplete)
 configureSequenceQuery conf@( QueryConf { qc_rotations = [] }) qDatum secToFrames frameToSecs =
