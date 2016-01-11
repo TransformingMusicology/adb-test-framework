@@ -1,6 +1,6 @@
 -- AudioDBTest - A test framework for the audioDB system
 --
--- Copyright (C) 2015 Richard Lewis, Goldsmiths' College
+-- Copyright (C) 2015, 2016 Richard Lewis, Goldsmiths' College
 -- Author: Richard Lewis <richard.lewis@gold.ac.uk>
 
 -- This file is part of AudioDBTest.
@@ -22,8 +22,8 @@ module Main where
 
 import AudioDB.Test
 import AudioDB.Test.Types
-import Options.Applicative
 import Data.Yaml (decodeFileEither)
+import Options.Applicative
 
 data TestConfig = TestConfig {
     configFile :: String

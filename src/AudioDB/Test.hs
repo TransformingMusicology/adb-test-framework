@@ -1,6 +1,6 @@
 -- AudioDBTest - A test framework for the audioDB system
 --
--- Copyright (C) 2015 Richard Lewis, Goldsmiths' College
+-- Copyright (C) 2015, 2016 Richard Lewis, Goldsmiths' College
 -- Author: Richard Lewis <richard.lewis@gold.ac.uk>
 
 -- This file is part of AudioDBTest.
@@ -20,50 +20,66 @@
 
 module AudioDB.Test where
 
-import Data.Yaml (ParseException)
 import AudioDB.Test.Types
-import AudioDB
-import ADB
-import Foreign.C.String
 import Data.DateTime
+import Data.Maybe (isJust)
+import Data.Yaml (ParseException)
+import Foreign.C.String
+import Sound.Audio.Database
+import Sound.Audio.Database.Query
+import Sound.Audio.Database.Types
 import System.Info as Sys
 import Data.List (sortBy)
 
-configurePointQuery :: QueryConf -> ADBDatumPtr -> IO QueryAllocator
-configurePointQuery conf qDatum = return $
-  mkPointQuery qDatum (qc_npoints conf)
+configurePointQuery :: QueryConf -> ADBDatum -> FeatureRate -> FrameSize -> (QueryAllocator, Maybe QueryTransformer, Maybe QueryComplete)
+configurePointQuery conf@( QueryConf { qc_rotations = [] }) qDatum secToFrames frameToSecs =
+  (mkPointQuery qDatum secToFrames frameToSecs (qc_npoints conf), Nothing, Nothing)
 
-configureTrackQuery :: QueryConf -> ADBDatumPtr -> IO QueryAllocator
-configureTrackQuery conf qDatum = return $
-  mkTrackQuery qDatum (qc_npoints conf) (qc_ntracks conf)
+configurePointQuery conf@( QueryConf { qc_rotations = (_:_) }) qDatum secToFrames frameToSecs = undefined
 
-configureSequenceQuery :: QueryConf -> ADBDatumPtr -> FeatureRate -> IO QueryAllocator
-configureSequenceQuery conf qDatum secToFrames = return $
-  mkSequenceQuery qDatum secToFrames (qc_npoints conf) (qc_ntracks conf) (qc_start conf) (qc_length conf) (mkDistance (qc_distance conf)) (mkAbsPower (qc_absoluteThreshold conf))
+configureTrackQuery :: QueryConf -> ADBDatum -> (QueryAllocator, Maybe QueryTransformer, Maybe QueryComplete)
+configureTrackQuery conf@( QueryConf { qc_rotations = [] }) qDatum =
+  (mkTrackQuery qDatum (qc_ntracks conf), Nothing, Nothing)
 
-configureNSequenceQuery :: QueryConf -> ADBDatumPtr -> FeatureRate -> IO QueryAllocator
-configureNSequenceQuery conf qDatum secToFrames = return $
-  mkNSequenceQuery qDatum secToFrames (qc_npoints conf) (qc_ntracks conf) (qc_start conf) (qc_length conf) (mkDistance (qc_distance conf)) (mkAbsPower (qc_absoluteThreshold conf))
+configureTrackQuery conf@( QueryConf { qc_rotations = (_:_) }) qDatum = undefined
 
-mkDistance :: Distance -> Maybe DistanceFlag
-mkDistance DotProduct                = Just dotProductFlag
-mkDistance EuclideanNormed           = Just euclideanNormedFlag
-mkDistance Euclidean                 = Just euclideanFlag
-mkDistance KullbackLeiblerDivergence = Just kullbackLeiblerDivergenceFlag
+configureSequenceQuery :: QueryConf -> ADBDatum -> FeatureRate -> FrameSize -> (QueryAllocator, Maybe QueryTransformer, Maybe QueryComplete)
+configureSequenceQuery conf@( QueryConf { qc_rotations = [] }) qDatum secToFrames frameToSecs =
+  (mkSequenceQuery qDatum secToFrames (qc_ntracks conf) (qc_start conf) (qc_length conf) (mkDistance (qc_distance conf)) (mkAbsPower (qc_absoluteThreshold conf)), Nothing, Nothing)
+
+configureSequenceQuery conf@( QueryConf { qc_rotations = (_:_) }) qDatum secToFrames frameToSecs = (a, Just t, Just c)
+  where
+    (a, t, c) = mkSequenceQueryWithRotation qDatum secToFrames frameToSecs (qc_ntracks conf) (qc_start conf) (qc_length conf) (mkDistance (qc_distance conf)) (mkAbsPower (qc_absoluteThreshold conf)) (qc_rotations conf)
+
+configureNSequenceQuery :: QueryConf -> ADBDatum -> FeatureRate -> FrameSize -> (QueryAllocator, Maybe QueryTransformer, Maybe QueryComplete)
+configureNSequenceQuery conf@( QueryConf { qc_rotations = [] }) qDatum secToFrames frameToSecs =
+  (mkNSequenceQuery qDatum secToFrames (qc_npoints conf) (qc_ntracks conf) (qc_length conf) (mkDistance (qc_distance conf)) (mkAbsPower (qc_absoluteThreshold conf)) (qc_queryHopSize conf) (qc_dbHopSize conf), Nothing, Nothing)
+
+configureNSequenceQuery conf@( QueryConf { qc_rotations = (_:_) }) qDatum secToFrames frameToSecs = undefined
+
+mkDistance :: Distance -> Maybe [DistanceFlag]
+mkDistance DotProduct                = Just [dotProductFlag]
+mkDistance EuclideanNormed           = Just [euclideanNormedFlag]
+mkDistance Euclidean                 = Just [euclideanFlag]
+mkDistance KullbackLeiblerDivergence = Just [kullbackLeiblerDivergenceFlag]
 
 mkAbsPower :: Double -> Maybe Double
 mkAbsPower 0.0 = Nothing
 mkAbsPower x   = Just x
 
-prepareQuery :: Query -> Maybe ADBDatumPtr -> IO QueryAllocator
-prepareQuery _ Nothing = error "Query features not found."
-prepareQuery q (Just qDatum)
-  | qtype == PointQuery     = configurePointQuery conf qDatum
+(//) :: Maybe a -> a -> a
+Just x  // _ = x
+Nothing // y = y
+
+prepareQuery :: Query -> ADBDatum -> (QueryAllocator, Maybe QueryTransformer, Maybe QueryComplete)
+prepareQuery q qDatum
+  | qtype == PointQuery     = configurePointQuery conf qDatum featureRate frameSize
   | qtype == TrackQuery     = configureTrackQuery conf { qc_accumulation = AccumPerTrack } qDatum
-  | qtype == SequenceQuery  = configureSequenceQuery conf { qc_accumulation = AccumPerTrack } qDatum featureRate
-  | qtype == NSequenceQuery = configureNSequenceQuery conf { qc_accumulation = AccumOneToOne } qDatum featureRate
+  | qtype == SequenceQuery  = configureSequenceQuery conf { qc_accumulation = AccumPerTrack } qDatum featureRate frameSize
+  | qtype == NSequenceQuery = configureNSequenceQuery conf { qc_accumulation = AccumPerTrack } qDatum featureRate frameSize
   where qtype = (qo_type . q_query) q
         featureRate = (db_featureRate . q_db) q
+        frameSize = (db_frameSize . q_db) q
         qo = q_query q
         conf = QueryConf { qc_key = (qo_key qo)
                          , qc_start = (qo_start qo)
@@ -81,22 +97,25 @@ prepareQuery q (Just qDatum)
                          , qc_relativeThreshold = (qo_relativeThreshold qo) // 0.0
                          , qc_durationRatio = 1.0
                          , qc_queryHopSize = (qo_sequenceHop qo)
-                         , qc_datumHopSize = (qo_sequenceHop qo) }
+                         , qc_dbHopSize = (qo_sequenceHop qo)
+                         , qc_rotations = (qo_rotations qo) // [] }
 
 runQuery :: Query -> IO QueryResult
 runQuery q = withExistingROAudioDB dbFileName withDB
   where
     dbFileName = (db_fileName . q_db) q
-    key = (qo_key . q_query) q
+    key        = (qo_key . q_query) q
+
+    queryForDatum _    Nothing     = error "Query features not found."
+    queryForDatum adb (Just datum) = do
+      let (qAlloc, qTransform, qComplete) = prepareQuery q datum
+      query adb qAlloc qTransform Nothing qComplete
+
+    withDB Nothing    = error $ "Could not open database " ++ dbFileName
     withDB (Just adb) = do
       let frameSize = (db_frameSize . q_db) q
 
-      -- FIXME withMaybeDatumPtr is giving me an IO (IO
-      -- QueryAllocator) so I'm unwrapping its return value
-      -- twice. This is silly and should be fixed.
-      qFunc   <- withMaybeDatumPtr adb key (\qDatum -> prepareQuery q qDatum)
-      qf      <- qFunc
-      results <- execQuery adb qf
+      results <- withMaybeDatumIO adb key (queryForDatum adb)
 
       let rankings        = sortBy cmpDistance (extractRankings frameSize results)
           cmpDistance a b = compare (rk_distance a) (rk_distance b)
