@@ -1,7 +1,7 @@
 name: AudioDBTest
 version: 0.1
 synopsis: A test framework for the audioDB system
-homepage: https://github.com/TransformingMusicology/audioDB-test-framework
+homepage: https://github.com/TransformingMusicology/adb-test-framework
 author: Richard Lewis
 license: GPL
 copyright: (C) 2015, 2016 Richard Lewis
