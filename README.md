@@ -39,9 +39,11 @@ You define a test in a YAML-formatted configuration file. In
 configuration file.
 
 Each file contains exactly one "test" which has an `identifier` value
-and one or more `queries`. Each query has the properties:
+and one or more `queries`.
 
 #### Queries
+
+Each query has the properties:
 
 <dl>
   <dt>idenitifier</dt>
@@ -99,7 +101,7 @@ The query is specified with the following properties:
   <dt>absoluteThreshold</dt>
   <dd>(optional) When power features are included, disregard any result sequences whose power values (i.e. loudness) are below this threshold; in dB, encoded as a double.</dd>
   <dt>relativeThreshold</dt>
-  <dd>(optional) When power features are included, only consider sequences as matches if there power values (i.e. loudness) is equal to this value; in dB, encoded as a double.</dd>
+  <dd>(optional) When power features are included, only consider sequences as matches if their power values (i.e. loudness) is equal to this value; in dB, encoded as a double.</dd>
   <dt>unit-norming</dt>
   <dd>(optional) Use unit norming (true|false)</dd>
   <dt>distance</dt>
@@ -110,7 +112,7 @@ The query is specified with the following properties:
 
 #### Results specification
 
-The required results are specified as a list of objects which each having the following properties:
+The required results are specified as a list of objects with each having the following properties:
 
 <dl>
   <dt>key</dt>
