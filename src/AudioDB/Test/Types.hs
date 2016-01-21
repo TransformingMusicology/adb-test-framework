@@ -183,7 +183,7 @@ data Ranking = Ranking {
   , rk_distThresh   :: Maybe Double
   , rk_start        :: Seconds
   , rk_startThresh  :: Maybe Seconds
-  , rk_length       :: Seconds
+  , rk_length       :: Maybe Seconds
   , rk_lengthThresh :: Maybe Seconds} deriving (Show)
 
 inMaybeRange :: (Num a, Ord a) => (a, Maybe a) -> (a, Maybe a) -> Bool
@@ -192,6 +192,10 @@ inMaybeRange (a, Just aRange) (b, Nothing)     = b >= (a - aRange) && b <= (a + 
 inMaybeRange (a, Nothing)     (b, Just bRange) = a >= (b - bRange) && a <= (b + bRange)
 inMaybeRange (a, Just aRange) (b, Just bRange) = (a >= (b - bRange) && a <= (b + bRange))
                                                  || (b >= (a - aRange) && b <= (a + aRange))
+
+maybeInMaybeRange :: (Num a, Ord a) => (Maybe a, Maybe a) -> (Maybe a, Maybe a) -> Bool
+maybeInMaybeRange (Just a, aRange)  (Just b, bRange)  = inMaybeRange (a, aRange) (b, bRange)
+maybeInMaybeRange (_, aRange) (_, bRange)             = True
 
 instance Eq Ranking where
   (==) (Ranking { rk_key = aKey
@@ -212,7 +216,7 @@ instance Eq Ranking where
              , rk_lengthThresh = bLenThresh})
     | aKey /= bKey = False
     | (aStart, aStartThresh) `inMaybeRange` (bStart, bStartThresh) &&
-      (aLen, aLenThresh) `inMaybeRange` (bLen, bLenThresh) &&
+      (aLen, aLenThresh) `maybeInMaybeRange` (bLen, bLenThresh) &&
       (aDist, aDistThresh) `inMaybeRange` (bDist, bDistThresh) = True
     | otherwise = False
 
@@ -227,7 +231,7 @@ instance FromJSON Ranking where
     <*> r .:? "distanceThreshold" .!= Nothing
     <*> r .:  "start"
     <*> r .:? "startThreshold"    .!= Nothing
-    <*> r .:  "length"
+    <*> r .:? "length"            .!= Nothing
     <*> r .:? "lengthThreshold"   .!= Nothing
   parseJSON _ = error "Could not parse ranking."
 
