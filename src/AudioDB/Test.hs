@@ -29,7 +29,8 @@ import Sound.Audio.Database
 import Sound.Audio.Database.Query
 import Sound.Audio.Database.Types
 import System.Info as Sys
-import Data.List (sortBy)
+import Data.List (sortBy, (\\), intersect)
+import Debug.Trace
 
 configurePointQuery :: QueryConf -> ADBDatum -> FeatureRate -> FrameSize -> (QueryAllocator, Maybe QueryTransformer, Maybe QueryComplete)
 configurePointQuery conf@( QueryConf { qc_rotations = [] }) qDatum secToFrames frameToSecs =
@@ -140,20 +141,22 @@ extractRankings framesToSecs r = map resToRank (query_results_results r)
               , rk_lengthThresh = Nothing }
 
 evaluate :: [Ranking] -> Query -> (Accuracy, Precision, Recall)
-evaluate rs q@(Query { q_evaluation = MatchDistances }) = (accuracy, precision, recall)
+evaluate rs q@(Query { q_evaluation = MatchDistances }) = trace traceExp (accuracy, precision, recall)
   where
     requiredResults = (q_requiredResults q)
-    positiveResults = zipWith (\a b -> if a == b then Just a else Nothing) rs requiredResults
-    tPR = trace ("positiveResults: " ++ (show positiveResults)) positiveResults
-    negativeResults = zipWith (\a b -> if a == b then Just a else Nothing) requiredResults rs
-    trueNegatives = [] -- What? the number of possible sequences in the database that are not requiredResults?
-    falseNegatives = filter (== Nothing) negativeResults
-    truePositives = filter (/= Nothing) positiveResults
-    falsePositives = filter (== Nothing) positiveResults
-    fracLen = realToFrac . length
-    accuracy = ((fracLen trueNegatives) + (fracLen truePositives)) / (fracLen requiredResults)
-    precision = (fracLen truePositives) / (fracLen truePositives) + (fracLen falsePositives)
-    recall = (fracLen truePositives) / (fracLen truePositives) + (fracLen falseNegatives)
+    truePositives   = rs `intersect` requiredResults
+    falsePositives  = rs \\ requiredResults
+    falseNegatives  = requiredResults \\ rs
+    fracLen         = realToFrac . length
+    accuracy        = 0
+    precision       = (fracLen truePositives) / ((fracLen truePositives) + (fracLen falsePositives))
+    recall          = (fracLen truePositives) / ((fracLen falseNegatives) + (fracLen truePositives))
+
+    traceExp = "falseNegatives: " ++ (show falseNegatives) ++
+               "\ntruePositives: " ++ (show truePositives) ++
+               "\nfalsePositives: " ++ (show falsePositives) ++
+               "\nprecision = TP [" ++ (show (fracLen truePositives)) ++ "] / (TP [" ++ (show (fracLen truePositives)) ++ "] + FP [" ++ (show (fracLen falsePositives)) ++ "])" ++
+               "\nrecall = TP [" ++ (show (fracLen truePositives)) ++ "] / (FN [" ++ (show (fracLen falseNegatives)) ++ "] + TP [" ++ (show (fracLen truePositives)) ++ "])"
 
 evaluate rs q@(Query { q_evaluation = MatchOrder }) = undefined
 
