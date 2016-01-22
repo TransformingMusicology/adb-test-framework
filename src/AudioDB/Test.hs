@@ -20,16 +20,16 @@
 
 module AudioDB.Test where
 
-import AudioDB.Test.Types
+import           AudioDB.Test.Types
 import qualified Data.ByteString.Char8 as BS (putStrLn)
-import Data.DateTime
-import Data.Maybe (isJust)
-import Data.Yaml (encode, ParseException)
-import Foreign.C.String
-import Sound.Audio.Database
-import Sound.Audio.Database.Query
-import Sound.Audio.Database.Types
-import System.Info as Sys
+import           Data.DateTime
+import           Data.Maybe (isJust)
+import           Data.Yaml (encode, ParseException)
+import           Foreign.C.String
+import           Sound.Audio.Database
+import           Sound.Audio.Database.Query
+import           Sound.Audio.Database.Types
+import           System.Info as Sys
 
 configurePointQuery :: QueryConf -> ADBDatum -> FeatureRate -> FrameSize -> (QueryAllocator, Maybe QueryTransformer, Maybe QueryComplete)
 configurePointQuery conf@( QueryConf { qc_rotations = [] }) qDatum secToFrames frameToSecs =
