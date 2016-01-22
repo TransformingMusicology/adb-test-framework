@@ -21,9 +21,10 @@
 module AudioDB.Test where
 
 import AudioDB.Test.Types
+import qualified Data.ByteString.Char8 as BS (putStrLn)
 import Data.DateTime
 import Data.Maybe (isJust)
-import Data.Yaml (ParseException)
+import Data.Yaml (encode, ParseException)
 import Foreign.C.String
 import Sound.Audio.Database
 import Sound.Audio.Database.Query
@@ -99,8 +100,8 @@ prepareQuery q qDatum
                          , qc_dbHopSize = (qo_sequenceHop qo)
                          , qc_rotations = (qo_rotations qo) // [] }
 
-runQuery :: Query -> IO QueryResult
-runQuery q = withExistingROAudioDB dbFileName withDB
+runQuery :: Bool -> Query -> IO QueryResult
+runQuery withEval q = withExistingROAudioDB dbFileName withDB
   where
     dbFileName = (db_fileName . q_db) q
     key        = (qo_key . q_query) q
@@ -130,18 +131,21 @@ extractRankings frameSize r = map resToRank (query_results_results r)
               , rk_start = (frameSize pos)
               , rk_length = 0.0 }
 
-saveRun :: TestRun -> IO ()
-saveRun = putStrLn . show
+showRun :: TestRun -> IO ()
+showRun = putStrLn . show
 
-runTest :: Test -> IO TestRun
-runTest test = do
+dumpRun :: TestRun -> IO ()
+dumpRun tr = BS.putStrLn $ encode tr
+
+runTest :: Bool -> Test -> IO TestRun
+runTest withEval test = do
   libaudioDB <- audiodb_lib_build_id >>= peekCString
   os         <- return Sys.os
   arch       <- return Sys.arch
   method     <- return Serial
 
   startTime  <- getCurrentTime
-  results    <- mapM runQuery (t_queries test)
+  results    <- mapM (runQuery withEval) (t_queries test)
   endTime    <- getCurrentTime
 
   return TestRun {
@@ -157,7 +161,8 @@ runTest test = do
 dryRunTest :: Test -> IO ()
 dryRunTest = putStrLn . show
 
-runEitherTest :: Bool -> Either ParseException Test -> IO ()
-runEitherTest False (Right t) = runTest t >>= saveRun
-runEitherTest True  (Right t) = dryRunTest t
-runEitherTest _     (Left ex) = error $ "Could not parse configuration file: " ++ (show ex)
+runEitherTest :: Bool -> Bool -> Either ParseException Test -> IO ()
+runEitherTest False withEval@False (Right t) = runTest withEval t >>= dumpRun
+runEitherTest False withEval@True  (Right t) = runTest withEval t >>= showRun
+runEitherTest True  _              (Right t) = dryRunTest t
+runEitherTest _     _              (Left ex) = error $ "Could not parse configuration file: " ++ (show ex)

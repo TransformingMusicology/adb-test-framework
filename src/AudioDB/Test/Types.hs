@@ -19,6 +19,7 @@
 -- along with AudioDBTest. If not, see <http://www.gnu.org/licenses/>.
 
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module AudioDB.Test.Types where
 
@@ -27,6 +28,7 @@ import Data.Aeson
 import Data.DateTime
 import Sound.Audio.Database
 import Sound.Audio.Database.Types
+import Text.Printf
 
 data QueryOpts = QueryOpts {
     qo_type              :: QueryType
@@ -189,6 +191,15 @@ instance FromJSON Ranking where
     <*> r .: "length"
   parseJSON _ = error "Could not parse ranking."
 
+precision :: (PrintfArg a, Fractional a) => a -> String
+precision = printf "%.2f"
+
+instance ToJSON Ranking where
+  toJSON Ranking{..} = object [ "key"      .= rk_key
+                              , "distance" .= precision rk_distance
+                              , "start"    .= precision rk_start
+                              , "length"   .= precision rk_length ]
+
 data Test = Test {
     t_identifier :: String
   , t_queries    :: [Query] } deriving (Eq, Show)
@@ -207,6 +218,10 @@ data QueryResult = QueryResult {
     qr_query_id :: String
   , qr_results  :: [Ranking] } deriving (Eq, Show)
 
+instance ToJSON QueryResult where
+  toJSON QueryResult{..} = object [ "query"   .= qr_query_id
+                                  , "results" .= qr_results ]
+
 data TestRun = TestRun {
     tr_test        :: Test
   , tr_results     :: [QueryResult]
@@ -216,3 +231,6 @@ data TestRun = TestRun {
   , tr_systemName  :: String
   , tr_systemArch  :: String
   , tr_execMethod  :: ExecutionMethod } deriving (Eq, Show)
+
+instance ToJSON TestRun where
+  toJSON TestRun{..} = object [ "queries" .= tr_results ]
