@@ -141,12 +141,12 @@ extractRankings framesToSecs r = map resToRank (query_results_results r)
               , rk_lengthThresh = Nothing }
 
 evaluate :: [Ranking] -> Query -> (Accuracy, Precision, Recall)
-evaluate rs q@(Query { q_evaluation = MatchDistances }) = trace traceExp (accuracy, precision, recall)
+evaluate returnedResults q@(Query { q_evaluation = MatchDistances }) = trace traceExp (accuracy, precision, recall)
   where
     requiredResults = (q_requiredResults q)
-    truePositives   = rs `intersect` requiredResults
-    falsePositives  = rs \\ requiredResults
-    falseNegatives  = requiredResults \\ rs
+    truePositives   = returnedResults `intersect` requiredResults
+    falsePositives  = returnedResults \\ requiredResults
+    falseNegatives  = requiredResults \\ returnedResults
     fracLen         = realToFrac . length
     accuracy        = 0
     precision       = (fracLen truePositives) / ((fracLen truePositives) + (fracLen falsePositives))
