@@ -29,7 +29,7 @@ import Sound.Audio.Database
 import Sound.Audio.Database.Query
 import Sound.Audio.Database.Types
 import System.Info as Sys
-import Data.List (sortBy, (\\), intersect)
+import Data.List (sortBy, (\\), intersect, deleteFirstsBy)
 import Debug.Trace
 
 configurePointQuery :: QueryConf -> ADBDatum -> FeatureRate -> FrameSize -> (QueryAllocator, Maybe QueryTransformer, Maybe QueryComplete)
@@ -158,7 +158,22 @@ evaluate returnedResults q@(Query { q_evaluation = MatchDistances }) = trace tra
                "\nprecision = TP [" ++ (show (fracLen truePositives)) ++ "] / (TP [" ++ (show (fracLen truePositives)) ++ "] + FP [" ++ (show (fracLen falsePositives)) ++ "])" ++
                "\nrecall = TP [" ++ (show (fracLen truePositives)) ++ "] / (FN [" ++ (show (fracLen falseNegatives)) ++ "] + TP [" ++ (show (fracLen truePositives)) ++ "])"
 
-evaluate rs q@(Query { q_evaluation = MatchOrder }) = undefined
+evaluate returnedResults q@(Query { q_evaluation = MatchOrder }) = trace traceExp (accuracy, precision, recall)
+  where
+    requiredResults = (q_requiredResults q)
+    truePositives   = map fst $ filter (\(rt,rq) -> rt `locEq` rq) $ zip returnedResults requiredResults
+    falsePositives  = deleteFirstsBy locEq returnedResults truePositives
+    falseNegatives  = deleteFirstsBy locEq requiredResults truePositives
+    fracLen         = realToFrac . length
+    accuracy        = 0
+    precision       = (fracLen truePositives) / ((fracLen truePositives) + (fracLen falsePositives))
+    recall          = (fracLen truePositives) / ((fracLen falseNegatives) + (fracLen truePositives))
+
+    traceExp = "falseNegatives: " ++ (show falseNegatives) ++
+               "\ntruePositives: " ++ (show truePositives) ++
+               "\nfalsePositives: " ++ (show falsePositives) ++
+               "\nprecision = TP [" ++ (show (fracLen truePositives)) ++ "] / (TP [" ++ (show (fracLen truePositives)) ++ "] + FP [" ++ (show (fracLen falsePositives)) ++ "])" ++
+               "\nrecall = TP [" ++ (show (fracLen truePositives)) ++ "] / (FN [" ++ (show (fracLen falseNegatives)) ++ "] + TP [" ++ (show (fracLen truePositives)) ++ "])"
 
 saveRun :: TestRun -> IO ()
 saveRun = putStrLn . show

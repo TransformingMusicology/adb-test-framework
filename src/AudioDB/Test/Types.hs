@@ -220,6 +220,22 @@ instance Eq Ranking where
       (aDist, aDistThresh) `inMaybeRange` (bDist, bDistThresh) = True
     | otherwise = False
 
+locEq :: Ranking -> Ranking -> Bool
+locEq (Ranking { rk_key = aKey
+                , rk_start = aStart
+                , rk_startThresh = aStartThresh
+                , rk_length = aLen
+                , rk_lengthThresh = aLenThresh})
+    (Ranking { rk_key = bKey
+             , rk_start = bStart
+             , rk_startThresh = bStartThresh
+             , rk_length = bLen
+             , rk_lengthThresh = bLenThresh})
+    | aKey /= bKey = False
+    | (aStart, aStartThresh) `inMaybeRange` (bStart, bStartThresh) &&
+      (aLen, aLenThresh) `maybeInMaybeRange` (bLen, bLenThresh) = True
+    | otherwise = False
+
 instance Ord Ranking where
   compare a b = undefined
 
