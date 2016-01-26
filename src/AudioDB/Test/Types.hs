@@ -38,7 +38,7 @@ data QueryOpts = QueryOpts {
   , qo_pointNN           :: Int
   , qo_radius            :: Double
   , qo_resultLen         :: Int
-  , qo_sequenceHop       :: Int
+  , qo_sequenceHop       :: Seconds
   , qo_absoluteThreshold :: Maybe Double
   , qo_relativeThreshold :: Maybe Double
   , qo_unitNorming       :: Bool
@@ -91,8 +91,8 @@ data QueryConf = QueryConf {
   , qc_absoluteThreshold   :: Double
   , qc_relativeThreshold   :: Double
   , qc_durationRatio       :: Double
-  , qc_queryHopSize        :: Int
-  , qc_dbHopSize           :: Int
+  , qc_queryHopSize        :: Seconds
+  , qc_dbHopSize           :: Seconds
   , qc_rotations           :: [Int] } deriving (Eq, Show)
 
 type Key = String
