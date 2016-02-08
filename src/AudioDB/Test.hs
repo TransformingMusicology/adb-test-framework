@@ -20,17 +20,17 @@
 
 module AudioDB.Test where
 
-import AudioDB.Test.Types
-import Data.DateTime
-import Data.Maybe (isJust)
-import Data.Yaml (ParseException)
-import Foreign.C.String
-import Sound.Audio.Database
-import Sound.Audio.Database.Query
-import Sound.Audio.Database.Types
-import System.Info as Sys
-import Data.List (sortBy, (\\), intersect, deleteFirstsBy)
-import Debug.Trace
+import           AudioDB.Test.Types
+import qualified Data.ByteString.Char8 as BS (putStrLn)
+import           Data.DateTime
+import           Data.List (sortBy, (\\), intersect, deleteFirstsBy)
+import           Data.Maybe (isJust)
+import           Data.Yaml (encode, ParseException)
+import           Foreign.C.String
+import           Sound.Audio.Database
+import           Sound.Audio.Database.Query
+import           Sound.Audio.Database.Types
+import           System.Info as Sys
 
 configurePointQuery :: QueryConf -> ADBDatum -> FeatureRate -> FrameSize -> (QueryAllocator, Maybe QueryTransformer, Maybe QueryComplete)
 configurePointQuery conf@( QueryConf { qc_rotations = [] }) qDatum secToFrames frameToSecs =
@@ -101,8 +101,8 @@ prepareQuery q qDatum
                          , qc_dbHopSize = (qo_sequenceHop qo)
                          , qc_rotations = (qo_rotations qo) // [] }
 
-runQuery :: Query -> IO QueryResult
-runQuery q = withExistingROAudioDB dbFileName withDB
+runQuery :: Bool -> Query -> IO QueryResult
+runQuery withEval q = withExistingROAudioDB dbFileName withDB
   where
     dbFileName = (db_fileName . q_db) q
     key        = (qo_key . q_query) q
@@ -141,7 +141,7 @@ extractRankings framesToSecs r = map resToRank (query_results_results r)
               , rk_lengthThresh = Nothing }
 
 evaluate :: [Ranking] -> Query -> (Accuracy, Precision, Recall)
-evaluate returnedResults q@(Query { q_evaluation = MatchDistances }) = trace traceExp (accuracy, precision, recall)
+evaluate returnedResults q@(Query { q_evaluation = MatchDistances }) = (accuracy, precision, recall)
   where
     requiredResults = (q_requiredResults q)
     truePositives   = returnedResults `intersect` requiredResults
@@ -152,13 +152,7 @@ evaluate returnedResults q@(Query { q_evaluation = MatchDistances }) = trace tra
     precision       = (fracLen truePositives) / ((fracLen truePositives) + (fracLen falsePositives))
     recall          = (fracLen truePositives) / ((fracLen falseNegatives) + (fracLen truePositives))
 
-    traceExp = "falseNegatives: " ++ (show falseNegatives) ++
-               "\ntruePositives: " ++ (show truePositives) ++
-               "\nfalsePositives: " ++ (show falsePositives) ++
-               "\nprecision = TP [" ++ (show (fracLen truePositives)) ++ "] / (TP [" ++ (show (fracLen truePositives)) ++ "] + FP [" ++ (show (fracLen falsePositives)) ++ "])" ++
-               "\nrecall = TP [" ++ (show (fracLen truePositives)) ++ "] / (FN [" ++ (show (fracLen falseNegatives)) ++ "] + TP [" ++ (show (fracLen truePositives)) ++ "])"
-
-evaluate returnedResults q@(Query { q_evaluation = MatchOrder }) = trace traceExp (accuracy, precision, recall)
+evaluate returnedResults q@(Query { q_evaluation = MatchOrder }) = (accuracy, precision, recall)
   where
     requiredResults = (q_requiredResults q)
     truePositives   = map fst $ filter (\(rt,rq) -> rt `locEq` rq) $ zip returnedResults requiredResults
@@ -169,24 +163,21 @@ evaluate returnedResults q@(Query { q_evaluation = MatchOrder }) = trace traceEx
     precision       = (fracLen truePositives) / ((fracLen truePositives) + (fracLen falsePositives))
     recall          = (fracLen truePositives) / ((fracLen falseNegatives) + (fracLen truePositives))
 
-    traceExp = "falseNegatives: " ++ (show falseNegatives) ++
-               "\ntruePositives: " ++ (show truePositives) ++
-               "\nfalsePositives: " ++ (show falsePositives) ++
-               "\nprecision = TP [" ++ (show (fracLen truePositives)) ++ "] / (TP [" ++ (show (fracLen truePositives)) ++ "] + FP [" ++ (show (fracLen falsePositives)) ++ "])" ++
-               "\nrecall = TP [" ++ (show (fracLen truePositives)) ++ "] / (FN [" ++ (show (fracLen falseNegatives)) ++ "] + TP [" ++ (show (fracLen truePositives)) ++ "])"
+showRun :: TestRun -> IO ()
+showRun = putStrLn . show
 
-saveRun :: TestRun -> IO ()
-saveRun = putStrLn . show
+dumpRun :: TestRun -> IO ()
+dumpRun tr = BS.putStrLn $ encode tr
 
-runTest :: Test -> IO TestRun
-runTest test = do
+runTest :: Bool -> Test -> IO TestRun
+runTest withEval test = do
   libaudioDB <- audiodb_lib_build_id >>= peekCString
   os         <- return Sys.os
   arch       <- return Sys.arch
   method     <- return Serial
 
   startTime  <- getCurrentTime
-  results    <- mapM runQuery (t_queries test)
+  results    <- mapM (runQuery withEval) (t_queries test)
   endTime    <- getCurrentTime
 
   return TestRun {
@@ -202,7 +193,8 @@ runTest test = do
 dryRunTest :: Test -> IO ()
 dryRunTest = putStrLn . show
 
-runEitherTest :: Bool -> Either ParseException Test -> IO ()
-runEitherTest False (Right t) = runTest t >>= saveRun
-runEitherTest True  (Right t) = dryRunTest t
-runEitherTest _     (Left ex) = error $ "Could not parse configuration file: " ++ (show ex)
+runEitherTest :: Bool -> Bool -> Either ParseException Test -> IO ()
+runEitherTest False withEval@False (Right t) = runTest withEval t >>= dumpRun
+runEitherTest False withEval@True  (Right t) = runTest withEval t >>= showRun
+runEitherTest True  _              (Right t) = dryRunTest t
+runEitherTest _     _              (Left ex) = error $ "Could not parse configuration file: " ++ (show ex)

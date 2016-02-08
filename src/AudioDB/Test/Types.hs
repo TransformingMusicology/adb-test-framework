@@ -19,14 +19,17 @@
 -- along with AudioDBTest. If not, see <http://www.gnu.org/licenses/>.
 
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module AudioDB.Test.Types where
 
 import Control.Applicative
 import Data.Aeson
 import Data.DateTime
+import Data.Maybe (maybe)
 import Sound.Audio.Database
 import Sound.Audio.Database.Types
+import Text.Printf
 
 data QueryOpts = QueryOpts {
     qo_type              :: QueryType
@@ -36,7 +39,7 @@ data QueryOpts = QueryOpts {
   , qo_pointNN           :: Int
   , qo_radius            :: Double
   , qo_resultLen         :: Int
-  , qo_sequenceHop       :: Int
+  , qo_sequenceHop       :: Seconds
   , qo_absoluteThreshold :: Maybe Double
   , qo_relativeThreshold :: Maybe Double
   , qo_unitNorming       :: Bool
@@ -89,8 +92,8 @@ data QueryConf = QueryConf {
   , qc_absoluteThreshold   :: Double
   , qc_relativeThreshold   :: Double
   , qc_durationRatio       :: Double
-  , qc_queryHopSize        :: Int
-  , qc_dbHopSize           :: Int
+  , qc_queryHopSize        :: Seconds
+  , qc_dbHopSize           :: Seconds
   , qc_rotations           :: [Int] } deriving (Eq, Show)
 
 type Key = String
@@ -251,6 +254,15 @@ instance FromJSON Ranking where
     <*> r .:? "lengthThreshold"   .!= Nothing
   parseJSON _ = error "Could not parse ranking."
 
+precision :: (PrintfArg a, Fractional a) => a -> String
+precision = printf "%.2f"
+
+instance ToJSON Ranking where
+  toJSON Ranking{..} = object [ "key"      .= rk_key
+                              , "distance" .= precision rk_distance
+                              , "start"    .= precision rk_start
+                              , "length"   .= maybe "" precision rk_length ]
+
 data Test = Test {
     t_identifier :: String
   , t_queries    :: [Query] } deriving (Eq, Show)
@@ -276,6 +288,10 @@ data QueryResult = QueryResult {
   , qr_results  :: [Ranking]
   , qr_fMeasure :: (Accuracy, Precision, Recall) } deriving (Eq, Show)
 
+instance ToJSON QueryResult where
+  toJSON QueryResult{..} = object [ "query"   .= qr_query_id
+                                  , "results" .= qr_results ]
+
 data TestRun = TestRun {
     tr_test        :: Test
   , tr_results     :: [QueryResult]
@@ -285,3 +301,6 @@ data TestRun = TestRun {
   , tr_systemName  :: String
   , tr_systemArch  :: String
   , tr_execMethod  :: ExecutionMethod } deriving (Eq, Show)
+
+instance ToJSON TestRun where
+  toJSON TestRun{..} = object [ "queries" .= tr_results ]

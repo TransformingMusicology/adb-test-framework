@@ -26,8 +26,9 @@ import Data.Yaml (decodeFileEither)
 import Options.Applicative
 
 data TestConfig = TestConfig {
-    configFile :: String
-  , dryRun :: Bool }
+    configFile  :: String
+  , dryRun      :: Bool
+  , dumpResults :: Bool }
 
 config :: Parser TestConfig
 config = TestConfig
@@ -39,6 +40,10 @@ config = TestConfig
              (    short 'n'
                <> long "dry-run"
                <> help "Don't execute the test; just check the configuration file." )
+         <*> switch
+             (    short 'd'
+               <> long "dump-results"
+               <> help "Execute the queries in the configuration but not the evaluation. Instead, dump YAML-formatted results suitable for future tests.")
 
 opts :: ParserInfo TestConfig
 opts = info ( helper <*> config )
@@ -47,8 +52,8 @@ opts = info ( helper <*> config )
          <> header "adbtest - a test framework for audioDB" )
 
 execTest :: TestConfig -> IO ()
-execTest (TestConfig f dry) =
-  Data.Yaml.decodeFileEither f >>= runEitherTest dry
+execTest (TestConfig f dry dump) =
+  Data.Yaml.decodeFileEither f >>= runEitherTest dry (not dump)
 
 main :: IO ()
 main = execParser opts >>= execTest
