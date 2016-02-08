@@ -55,7 +55,9 @@ configureNSequenceQuery :: QueryConf -> ADBDatum -> FeatureRate -> FrameSize -> 
 configureNSequenceQuery conf@( QueryConf { qc_rotations = [] }) qDatum secToFrames frameToSecs =
   (mkNSequenceQuery qDatum secToFrames (qc_npoints conf) (qc_ntracks conf) (qc_length conf) (mkDistance (qc_distance conf)) (mkAbsPower (qc_absoluteThreshold conf)) (qc_queryHopSize conf) (qc_dbHopSize conf), Nothing, Nothing)
 
-configureNSequenceQuery conf@( QueryConf { qc_rotations = (_:_) }) qDatum secToFrames frameToSecs = undefined
+configureNSequenceQuery conf@( QueryConf { qc_rotations = (_:_) }) qDatum secToFrames frameToSecs = (a, Just t, Just c)
+  where
+    (a, t, c) = mkNSequenceQueryWithRotation qDatum secToFrames (qc_npoints conf) (qc_ntracks conf) (qc_length conf) (mkDistance (qc_distance conf)) (mkAbsPower (qc_absoluteThreshold conf)) (qc_queryHopSize conf) (qc_dbHopSize conf) (qc_rotations conf)
 
 mkDistance :: Distance -> Maybe [DistanceFlag]
 mkDistance DotProduct                = Just [dotProductFlag]
