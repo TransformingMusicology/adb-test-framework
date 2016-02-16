@@ -19,7 +19,7 @@ database system.
 4. If you haven't installed `libaudioDB-haskell` somewhere where `GHC`
    will look for it, you can point `cabal` to your local copy:
 
-        $ cabal add-source /path/to/libaudioDB-haskell
+        $ cabal sandbox add-source /path/to/libaudioDB-haskell
 
 5. Install the dependencies:
 
