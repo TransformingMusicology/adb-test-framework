@@ -10,7 +10,7 @@ cabal-version: >= 1.8
 
 library
   build-depends: base, AudioDB, datetime, yaml, aeson, bytestring
-  exposed-modules: AudioDB.Test, AudioDB.Test.Types, AudioDB.Test.Options
+  exposed-modules: AudioDB.Test, AudioDB.Test.Types
   hs-source-dirs: src
   ghc-options: -Wall
 
