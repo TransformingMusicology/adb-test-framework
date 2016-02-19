@@ -65,14 +65,16 @@ instance FromJSON QueryOpts where
 data QueryType = PointQuery
                | TrackQuery
                | SequenceQuery
+               | SequencePerTrackQuery
                | NSequenceQuery
                deriving (Eq, Show)
 
 instance FromJSON QueryType where
-  parseJSON (String "point")     = pure PointQuery
-  parseJSON (String "track")     = pure TrackQuery
-  parseJSON (String "sequence")  = pure SequenceQuery
-  parseJSON (String "nsequence") = pure NSequenceQuery
+  parseJSON (String "point")               = pure PointQuery
+  parseJSON (String "track")               = pure TrackQuery
+  parseJSON (String "sequence")            = pure SequenceQuery
+  parseJSON (String "sequence-per-track")  = pure SequencePerTrackQuery
+  parseJSON (String "nsequence")           = pure NSequenceQuery
   parseJSON qt = error $ "Invalid query type: " ++ (show qt)
 
 data QueryConf = QueryConf {
