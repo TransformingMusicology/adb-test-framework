@@ -1,4 +1,4 @@
-name: AudioDBTest
+name: audioDB-test-framework
 version: 0.1
 synopsis: A test framework for the audioDB system
 homepage: https://github.com/TransformingMusicology/adb-test-framework
