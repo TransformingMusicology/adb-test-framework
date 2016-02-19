@@ -83,7 +83,7 @@ The query is specified with the following properties:
 
 <dl>
   <dt>type</dt>
-  <dd>One of: <strong><code>point</code></strong>; <strong><code>track</code></strong>; <strong><code>sequence</code></strong>; or <strong><code>nsequence</code></strong></dd>
+  <dd>One of: <strong><code>point</code></strong>; <strong><code>track</code></strong>; <strong><code>sequence</code></strong>; <strong><code>sequence-per-track</code></strong>; or <strong><code>nsequence</code></strong></dd>
   <dt>key</dt>
   <dd>The key of the track from the database from which the query sequence will be drawn.</dd>
   <dt>start</dt>
@@ -97,7 +97,7 @@ The query is specified with the following properties:
   <dt>resultLen</dt>
   <dd>How many tracks should be included in the results?</dd>
   <dt>sequenceHop</dt>
-  <dd>(optional) When executing an <strong><code>nsequence</code></strong>-type query, skip this number of sequences between each sequence searched for.</dd>
+  <dd>(optional) When executing a <strong><code>sequence</code></strong>- or <strong><code>nsequence</code></strong>-type query, skip forward by this number of seconds between each comparison in the target tracks. A sensible value is the length of the search sequence which then results in contiguous (and non-overlapping) comparisons.</dd>
   <dt>absoluteThreshold</dt>
   <dd>(optional) When power features are included, disregard any result sequences whose power values (i.e. loudness) are below this threshold; in dB, encoded as a double.</dd>
   <dt>relativeThreshold</dt>

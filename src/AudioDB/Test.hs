@@ -44,19 +44,27 @@ configureTrackQuery conf@( QueryConf { qc_rotations = [] }) qDatum =
 
 configureTrackQuery conf@( QueryConf { qc_rotations = (_:_) }) qDatum = undefined
 
-configureSequenceQuery :: QueryConf -> ADBDatum -> FeatureRate -> FrameSize -> (QueryAllocator, Maybe QueryTransformer, Maybe QueryComplete)
-configureSequenceQuery conf@( QueryConf { qc_rotations = [] }) qDatum secToFrames frameToSecs =
-  (mkSequenceQuery qDatum secToFrames (qc_ntracks conf) (qc_start conf) (qc_length conf) (mkDistance (qc_distance conf)) (mkAbsPower (qc_absoluteThreshold conf)), Nothing, Nothing)
+configureSequenceQuery :: QueryConf -> ADBDatum -> FeatureRate -> (QueryAllocator, Maybe QueryTransformer, Maybe QueryComplete)
+configureSequenceQuery conf@( QueryConf { qc_rotations = [] }) qDatum secToFrames =
+  (mkSequenceQuery qDatum secToFrames (qc_npoints conf) (qc_ntracks conf) (qc_start conf) (qc_length conf) (mkDistance (qc_distance conf)) (mkAbsPower (qc_absoluteThreshold conf)) (qc_queryHopSize conf) (qc_dbHopSize conf), Nothing, Nothing)
 
-configureSequenceQuery conf@( QueryConf { qc_rotations = (_:_) }) qDatum secToFrames frameToSecs = (a, Just t, Just c)
+configureSequenceQuery conf@( QueryConf { qc_rotations = (_:_) }) qDatum secToFrames = (a, Just t, Just c)
   where
-    (a, t, c) = mkSequenceQueryWithRotation qDatum secToFrames frameToSecs (qc_ntracks conf) (qc_start conf) (qc_length conf) (mkDistance (qc_distance conf)) (mkAbsPower (qc_absoluteThreshold conf)) (qc_rotations conf)
+    (a, t, c) = mkSequenceQueryWithRotation qDatum secToFrames (qc_npoints conf) (qc_ntracks conf) (qc_start conf) (qc_length conf) (mkDistance (qc_distance conf)) (mkAbsPower (qc_absoluteThreshold conf)) (qc_queryHopSize conf) (qc_dbHopSize conf) (qc_rotations conf)
 
-configureNSequenceQuery :: QueryConf -> ADBDatum -> FeatureRate -> FrameSize -> (QueryAllocator, Maybe QueryTransformer, Maybe QueryComplete)
-configureNSequenceQuery conf@( QueryConf { qc_rotations = [] }) qDatum secToFrames frameToSecs =
+configureSequencePerTrackQuery :: QueryConf -> ADBDatum -> FeatureRate -> (QueryAllocator, Maybe QueryTransformer, Maybe QueryComplete)
+configureSequencePerTrackQuery conf@( QueryConf { qc_rotations = [] }) qDatum secToFrames =
+  (mkSequencePerTrackQuery qDatum secToFrames (qc_ntracks conf) (qc_start conf) (qc_length conf) (mkDistance (qc_distance conf)) (mkAbsPower (qc_absoluteThreshold conf)), Nothing, Nothing)
+
+configureSequencePerTrackQuery conf@( QueryConf { qc_rotations = (_:_) }) qDatum secToFrames = (a, Just t, Just c)
+  where
+    (a, t, c) = mkSequencePerTrackQueryWithRotation qDatum secToFrames (qc_ntracks conf) (qc_start conf) (qc_length conf) (mkDistance (qc_distance conf)) (mkAbsPower (qc_absoluteThreshold conf)) (qc_rotations conf)
+
+configureNSequenceQuery :: QueryConf -> ADBDatum -> FeatureRate -> (QueryAllocator, Maybe QueryTransformer, Maybe QueryComplete)
+configureNSequenceQuery conf@( QueryConf { qc_rotations = [] }) qDatum secToFrames =
   (mkNSequenceQuery qDatum secToFrames (qc_npoints conf) (qc_ntracks conf) (qc_length conf) (mkDistance (qc_distance conf)) (mkAbsPower (qc_absoluteThreshold conf)) (qc_queryHopSize conf) (qc_dbHopSize conf), Nothing, Nothing)
 
-configureNSequenceQuery conf@( QueryConf { qc_rotations = (_:_) }) qDatum secToFrames frameToSecs = (a, Just t, Just c)
+configureNSequenceQuery conf@( QueryConf { qc_rotations = (_:_) }) qDatum secToFrames = (a, Just t, Just c)
   where
     (a, t, c) = mkNSequenceQueryWithRotation qDatum secToFrames (qc_npoints conf) (qc_ntracks conf) (qc_length conf) (mkDistance (qc_distance conf)) (mkAbsPower (qc_absoluteThreshold conf)) (qc_queryHopSize conf) (qc_dbHopSize conf) (qc_rotations conf)
 
@@ -76,10 +84,12 @@ Nothing // y = y
 
 prepareQuery :: Query -> ADBDatum -> (QueryAllocator, Maybe QueryTransformer, Maybe QueryComplete)
 prepareQuery q qDatum
-  | qtype == PointQuery     = configurePointQuery conf qDatum featureRate frameSize
-  | qtype == TrackQuery     = configureTrackQuery conf { qc_accumulation = AccumPerTrack } qDatum
-  | qtype == SequenceQuery  = configureSequenceQuery conf { qc_accumulation = AccumPerTrack } qDatum featureRate frameSize
-  | qtype == NSequenceQuery = configureNSequenceQuery conf { qc_accumulation = AccumPerTrack } qDatum featureRate frameSize
+  | qtype == PointQuery             = configurePointQuery conf qDatum featureRate frameSize
+  | qtype == TrackQuery             = configureTrackQuery conf { qc_accumulation = AccumPerTrack } qDatum
+  | qtype == SequenceQuery          = configureSequenceQuery conf { qc_accumulation = AccumPerTrack } qDatum featureRate
+  | qtype == SequencePerTrackQuery  = configureSequencePerTrackQuery conf { qc_accumulation = AccumPerTrack } qDatum featureRate
+  | qtype == NSequenceQuery         = configureNSequenceQuery conf { qc_accumulation = AccumPerTrack } qDatum featureRate
+  | otherwise                       = error $ "No such query type: " ++ show qtype
   where qtype = (qo_type . q_query) q
         featureRate = (db_featureRate . q_db) q
         frameSize = (db_frameSize . q_db) q
