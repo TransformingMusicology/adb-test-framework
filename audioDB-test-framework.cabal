@@ -9,13 +9,13 @@ build-type: Simple
 cabal-version: >= 1.8
 
 library
-  build-depends: base, audioDB, datetime, yaml, aeson, bytestring
+  build-depends: base, audioDB, datetime, yaml, aeson, bytestring, text, logging
   exposed-modules: AudioDB.Test, AudioDB.Test.Types
   hs-source-dirs: src
   ghc-options: -Wall
 
 executable adbtest
-  build-depends: base, audioDB, optparse-applicative, datetime, yaml, aeson, bytestring
+  build-depends: base, audioDB, optparse-applicative, datetime, yaml, aeson, bytestring, text, logging
   main-is: Main.hs
   hs-source-dirs: src
   ghc-options: -Wall

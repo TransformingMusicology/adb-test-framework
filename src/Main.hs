@@ -22,13 +22,15 @@ module Main where
 
 import AudioDB.Test
 import AudioDB.Test.Types
+import Control.Logging (LogLevel(..), setLogLevel, withStderrLogging)
 import Data.Yaml (decodeFileEither)
 import Options.Applicative
 
 data TestConfig = TestConfig {
     configFile  :: String
   , dryRun      :: Bool
-  , dumpResults :: Bool }
+  , dumpResults :: Bool
+  , verbose     :: Bool }
 
 config :: Parser TestConfig
 config = TestConfig
@@ -44,6 +46,10 @@ config = TestConfig
              (    short 'd'
                <> long "dump-results"
                <> help "Execute the queries in the configuration but not the evaluation. Instead, dump YAML-formatted results suitable for future tests.")
+         <*> switch
+             (    short 'v'
+               <> long "verbose"
+               <> help "Print logging messages.")
 
 opts :: ParserInfo TestConfig
 opts = info ( helper <*> config )
@@ -52,8 +58,9 @@ opts = info ( helper <*> config )
          <> header "adbtest - a test framework for audioDB" )
 
 execTest :: TestConfig -> IO ()
-execTest (TestConfig f dry dump) =
-  Data.Yaml.decodeFileEither f >>= runEitherTest dry (not dump)
+execTest (TestConfig f dry dump verbose) = do
+  setLogLevel $ if verbose then LevelInfo else LevelError
+  withStderrLogging $ Data.Yaml.decodeFileEither f >>= runEitherTest dry (not dump)
 
 main :: IO ()
 main = execParser opts >>= execTest
