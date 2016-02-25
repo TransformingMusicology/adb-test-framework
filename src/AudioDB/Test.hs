@@ -234,7 +234,6 @@ extractRankings framesToSecs r = map resToRank (query_results_results r)
               , rk_distance = dist
               , rk_start = (framesToSecs pos)
               , rk_length = Nothing
-              , rk_nsequence = Nothing
               , rk_distThresh = Nothing
               , rk_startThresh = Nothing
               , rk_lengthThresh = Nothing }

@@ -183,7 +183,6 @@ instance FromJSON Database where
 
 data Ranking = Ranking {
     rk_key          :: Key
-  , rk_nsequence    :: Maybe Int
   , rk_distance     :: Double
   , rk_distThresh   :: Maybe Double
   , rk_start        :: Seconds
@@ -204,7 +203,6 @@ maybeInMaybeRange (_, aRange) (_, bRange)             = True
 
 instance Eq Ranking where
   (==) (Ranking { rk_key = aKey
-                , rk_nsequence = aNSeq
                 , rk_distance = aDist
                 , rk_distThresh = aDistThresh
                 , rk_start = aStart
@@ -212,7 +210,6 @@ instance Eq Ranking where
                 , rk_length = aLen
                 , rk_lengthThresh = aLenThresh})
     (Ranking { rk_key = bKey
-             , rk_nsequence = bNSeq
              , rk_distance = bDist
              , rk_distThresh = bDistThresh
              , rk_start = bStart
@@ -247,7 +244,6 @@ instance Ord Ranking where
 instance FromJSON Ranking where
   parseJSON (Object r) = Ranking
     <$> r .:  "key"
-    <*> r .:? "nSequence"         .!= Nothing
     <*> r .:  "distance"
     <*> r .:? "distanceThreshold" .!= Nothing
     <*> r .:  "start"
