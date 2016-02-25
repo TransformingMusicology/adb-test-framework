@@ -6,7 +6,7 @@ author: Richard Lewis
 license: GPL
 copyright: (C) 2015, 2016 Richard Lewis
 build-type: Simple
-cabal-version: >= 1.8
+cabal-version: >= 1.9.2
 
 library
   build-depends: base, audioDB, datetime, yaml, aeson, bytestring, text, logging
@@ -19,4 +19,12 @@ executable adbtest
   main-is: Main.hs
   hs-source-dirs: src
   ghc-options: -Wall
+  extra-libraries: audioDB
+
+test-suite adbtest-tests
+  type: detailed-0.9
+  test-module: TestSuite
+  build-depends: base, Cabal >= 1.9.2, audioDB, datetime, yaml, aeson, bytestring, text, logging
+  hs-source-dirs: src, tests
+  other-modules: AudioDB.Test, AudioDB.Test.Types
   extra-libraries: audioDB
