@@ -193,7 +193,7 @@ data Ranking = Ranking {
 inMaybeRange :: (Num a, Ord a) => (a, Maybe a) -> (a, Maybe a) -> Bool
 inMaybeRange (a, Nothing)     (b, Nothing)     = a == b
 inMaybeRange (a, Just aRange) (b, Nothing)     = b >= (a - aRange) && b <= (a + aRange)
-inMaybeRange (a, Nothing)     (b, Just bRange) = a >= (b - bRange) && a <= (b + bRange)
+inMaybeRange (a, Nothing)     (b, Just _)      = a == b
 inMaybeRange (a, Just aRange) (b, Just bRange) = (a >= (b - bRange) && a <= (b + bRange))
                                                  || (b >= (a - aRange) && b <= (a + aRange))
 
