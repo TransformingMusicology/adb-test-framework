@@ -151,7 +151,7 @@ testMatchDistancesPrecision10 = TestInstance {
     returnedResults = requiredResults
     requiredPrecision = 1.0
     (_, computedPrecision, _) = evaluate returnedResults query
-    query = Query { q_identifier      = "TestMatchDistancePrecision10"
+    query = Query { q_identifier      = "TestMatchDistancesPrecision10"
                   , q_db              = dummyDB
                   , q_query           = dummyQueryOpts
                   , q_specifiedBy     = "Tester"
@@ -175,7 +175,7 @@ testMatchOrderPrecision10 = TestInstance {
     returnedResults = requiredResults
     requiredPrecision = 1.0
     (_, computedPrecision, _) = evaluate returnedResults query
-    query = Query { q_identifier      = "TestMatchDistancePrecision10"
+    query = Query { q_identifier      = "TestMatchOrderPrecision10"
                   , q_db              = dummyDB
                   , q_query           = dummyQueryOpts
                   , q_specifiedBy     = "Tester"
