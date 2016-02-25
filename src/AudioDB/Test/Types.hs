@@ -252,14 +252,14 @@ instance FromJSON Ranking where
     <*> r .:? "lengthThreshold"   .!= Nothing
   parseJSON _ = error "Could not parse ranking."
 
-precision :: (PrintfArg a, Fractional a) => a -> String
-precision = printf "%.2f"
+showDbl :: (PrintfArg a, Fractional a) => a -> String
+showDbl = printf "%.4f"
 
 instance ToJSON Ranking where
   toJSON Ranking{..} = object [ "key"      .= rk_key
-                              , "distance" .= precision rk_distance
-                              , "start"    .= precision rk_start
-                              , "length"   .= maybe "" precision rk_length ]
+                              , "distance" .= showDbl rk_distance
+                              , "start"    .= showDbl rk_start
+                              , "length"   .= maybe "" showDbl rk_length ]
 
 data Test = Test {
     t_identifier :: String
@@ -279,6 +279,15 @@ type Accuracy = Double
 type Precision = Double
 type Recall = Double
 
+accuracy :: (Accuracy, Precision, Recall) -> Accuracy
+accuracy (a,_,_) = a
+
+precision :: (Accuracy, Precision, Recall) -> Precision
+precision (_,p,_) = p
+
+recall :: (Accuracy, Precision, Recall) -> Recall
+recall (_,_,r) = r
+
 -- FIXME How can we make this more polymorphic to accommodate
 -- different kinds of Evaluation?
 data QueryResult = QueryResult {
@@ -287,8 +296,11 @@ data QueryResult = QueryResult {
   , qr_fMeasure :: (Accuracy, Precision, Recall) } deriving (Eq, Show)
 
 instance ToJSON QueryResult where
-  toJSON QueryResult{..} = object [ "query"   .= qr_query_id
-                                  , "results" .= qr_results ]
+  toJSON QueryResult{..} = object [ "query"     .= qr_query_id
+                                  , "results"   .= qr_results
+                                  , "accuracy"  .= showDbl (accuracy qr_fMeasure)
+                                  , "precision" .= showDbl (precision qr_fMeasure)
+                                  , "recall"    .= showDbl (recall qr_fMeasure) ]
 
 data TestRun = TestRun {
     tr_test        :: Test
@@ -301,4 +313,10 @@ data TestRun = TestRun {
   , tr_execMethod  :: ExecutionMethod } deriving (Eq, Show)
 
 instance ToJSON TestRun where
-  toJSON TestRun{..} = object [ "queries" .= tr_results ]
+  toJSON TestRun{..} = object [ "test"        .= (t_identifier tr_test)
+                              , "queries"     .= tr_results
+                              , "start-time"  .= tr_startTime
+                              , "end-time"    .= tr_endTime
+                              , "lib-version" .= tr_libaudioDBv
+                              , "system"      .= tr_systemName
+                              , "arch"        .= tr_systemArch ]
