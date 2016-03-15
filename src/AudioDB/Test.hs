@@ -23,10 +23,11 @@
 module AudioDB.Test where
 
 import           AudioDB.Test.Types
-import           Control.Logging (log', timedLog', warn', errorL')
+import           AudioDB.Evaluation (evaluate)
+import           Control.Logging (log', timedLog', warn', errorL', traceL')
 import qualified Data.ByteString.Char8 as BS (putStrLn)
 import           Data.DateTime
-import           Data.List (sortBy, (\\), intersect, deleteFirstsBy)
+import           Data.List (sortBy)
 import           Data.Maybe (isJust)
 import qualified Data.Text as T (pack, append)
 import           Data.Yaml (encode, ParseException)
@@ -237,29 +238,6 @@ extractRankings framesToSecs r = map resToRank (query_results_results r)
               , rk_distThresh = Nothing
               , rk_startThresh = Nothing
               , rk_lengthThresh = Nothing }
-
-evaluate :: [Ranking] -> Query -> (Accuracy, Precision, Recall)
-evaluate returnedResults q@(Query { q_evaluation = MatchDistances }) = (accuracy, precision, recall)
-  where
-    requiredResults = (q_requiredResults q)
-    truePositives   = returnedResults `intersect` requiredResults
-    falsePositives  = returnedResults \\ requiredResults
-    falseNegatives  = requiredResults \\ returnedResults
-    fracLen         = realToFrac . length
-    accuracy        = 0
-    precision       = (fracLen truePositives) / ((fracLen truePositives) + (fracLen falsePositives))
-    recall          = (fracLen truePositives) / ((fracLen falseNegatives) + (fracLen truePositives))
-
-evaluate returnedResults q@(Query { q_evaluation = MatchOrder }) = (accuracy, precision, recall)
-  where
-    requiredResults = (q_requiredResults q)
-    truePositives   = map fst $ filter (\(rt,rq) -> rt `locEq` rq) $ zip returnedResults requiredResults
-    falsePositives  = deleteFirstsBy locEq returnedResults truePositives
-    falseNegatives  = deleteFirstsBy locEq requiredResults truePositives
-    fracLen         = realToFrac . length
-    accuracy        = 0
-    precision       = (fracLen truePositives) / ((fracLen truePositives) + (fracLen falsePositives))
-    recall          = (fracLen truePositives) / ((fracLen falseNegatives) + (fracLen truePositives))
 
 showRun :: TestRun -> IO ()
 showRun = putStrLn . show

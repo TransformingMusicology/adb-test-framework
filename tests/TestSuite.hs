@@ -4,6 +4,7 @@ import Distribution.TestSuite
 
 import AudioDB.Test
 import AudioDB.Test.Types hiding (Test)
+import AudioDB.Evaluation
 import Control.Logging (withStderrLogging)
 
 testInMaybeRange :: TestInstance

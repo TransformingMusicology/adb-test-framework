@@ -10,7 +10,7 @@ cabal-version: >= 1.9.2
 
 library
   build-depends: base, audioDB, datetime, yaml, aeson, bytestring, text, logging
-  exposed-modules: AudioDB.Test, AudioDB.Test.Types
+  exposed-modules: AudioDB.Test, AudioDB.Evaluation, AudioDB.Test.Types
   hs-source-dirs: src
   ghc-options: -Wall
 
@@ -26,5 +26,5 @@ test-suite adbtest-tests
   test-module: TestSuite
   build-depends: base, Cabal >= 1.9.2, audioDB, datetime, yaml, aeson, bytestring, text, logging
   hs-source-dirs: src, tests
-  other-modules: AudioDB.Test, AudioDB.Test.Types
+  other-modules: AudioDB.Test, AudioDB.Evaluation, AudioDB.Test.Types
   extra-libraries: audioDB
