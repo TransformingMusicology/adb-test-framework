@@ -307,17 +307,17 @@ data ExecutionMethod = Serial
                      | Parallel
                      deriving (Eq, Show)
 
-type Accuracy = Double
+type FMeasure = Double
 type Precision = Double
 type Recall = Double
 
-accuracy :: (Accuracy, Precision, Recall) -> Accuracy
-accuracy (a,_,_) = a
+fMeasure :: (FMeasure, Precision, Recall) -> FMeasure
+fMeasure (a,_,_) = a
 
-precision :: (Accuracy, Precision, Recall) -> Precision
+precision :: (FMeasure, Precision, Recall) -> Precision
 precision (_,p,_) = p
 
-recall :: (Accuracy, Precision, Recall) -> Recall
+recall :: (FMeasure, Precision, Recall) -> Recall
 recall (_,_,r) = r
 
 -- FIXME How can we make this more polymorphic to accommodate
@@ -325,12 +325,12 @@ recall (_,_,r) = r
 data QueryResult = QueryResult {
     qr_query    :: Query
   , qr_results  :: [Ranking]
-  , qr_fMeasure :: (Accuracy, Precision, Recall) } deriving (Eq, Show)
+  , qr_fMeasure :: (FMeasure, Precision, Recall) } deriving (Eq, Show)
 
 instance ToJSON QueryResult where
   toJSON QueryResult{..} = object [ "query"     .= qr_query
                                   , "results"   .= qr_results
-                                  , "accuracy"  .= showDbl (accuracy qr_fMeasure)
+                                  , "fMeasure"  .= showDbl (fMeasure qr_fMeasure)
                                   , "precision" .= showDbl (precision qr_fMeasure)
                                   , "recall"    .= showDbl (recall qr_fMeasure) ]
 
