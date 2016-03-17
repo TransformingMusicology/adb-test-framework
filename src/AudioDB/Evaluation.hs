@@ -20,7 +20,8 @@
 
 {-# LANGUAGE OverloadedStrings #-}
 
-module AudioDB.Evaluation where
+module AudioDB.Evaluation ( evaluate
+                          , interpolatedAvgPrecision ) where
 
 import           AudioDB.Test.Types
 import           Data.List ((\\), intersect, intersectBy, deleteFirstsBy, nubBy)
@@ -60,3 +61,11 @@ evaluate returnedResults q@(Query { q_evaluation = MatchLocations }) = (fMeasure
     fMeasure        = 2 * ((precision * recall) / (precision + recall))
     precision       = (fracLen truePositives) / ((fracLen truePositives) + (fracLen falsePositives))
     recall          = (fracLen truePositives) / ((fracLen falseNegatives) + (fracLen truePositives))
+
+interpolatedAvgPrecision :: [Ranking] -> Query -> [Recall] -> [(FMeasure, Precision, Recall)]
+interpolatedAvgPrecision returnedResults q levels =
+  applyGivenRecalls $ map (flip evaluate $ q) resultsAtLevels
+  where
+    applyGivenRecalls fs = map (\(r, (f, p, _)) -> (f, p, r)) $ zip levels fs
+    resultsAtLevels = map (flip take $ returnedResults) levelSizes
+    levelSizes      = map (\lvl -> ceiling $ lvl * (realToFrac $ length returnedResults)) levels

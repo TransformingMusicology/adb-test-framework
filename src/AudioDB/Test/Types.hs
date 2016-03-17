@@ -311,28 +311,40 @@ type FMeasure = Double
 type Precision = Double
 type Recall = Double
 
-fMeasure :: (FMeasure, Precision, Recall) -> FMeasure
-fMeasure (a,_,_) = a
+-- FIXME This was added for the purpose of being able to implement a
+-- custom ToJSON instance for (FMeasure, Precision, Recall). It's now
+-- essentially a hand-coded record type. Should we just make it one?
+newtype FmPR = FmPR (FMeasure, Precision, Recall) deriving (Eq, Show)
 
-precision :: (FMeasure, Precision, Recall) -> Precision
-precision (_,p,_) = p
+fMeasure :: FmPR -> FMeasure
+fMeasure (FmPR (a,_,_)) = a
 
-recall :: (FMeasure, Precision, Recall) -> Recall
-recall (_,_,r) = r
+precision :: FmPR -> Precision
+precision (FmPR (_,p,_)) = p
+
+recall :: FmPR -> Recall
+recall (FmPR (_,_,r)) = r
 
 -- FIXME How can we make this more polymorphic to accommodate
 -- different kinds of Evaluation?
 data QueryResult = QueryResult {
     qr_query    :: Query
   , qr_results  :: [Ranking]
-  , qr_fMeasure :: (FMeasure, Precision, Recall) } deriving (Eq, Show)
+  , qr_fMeasure :: FmPR
+  , qr_intAvgPrecision :: [FmPR] } deriving (Eq, Show)
+
+instance ToJSON FmPR where
+  toJSON f = object [ "fMeasure"  .= showDbl (fMeasure f)
+                    , "precision" .= showDbl (precision f)
+                    , "recall"    .= showDbl (recall f) ]
 
 instance ToJSON QueryResult where
   toJSON QueryResult{..} = object [ "query"     .= qr_query
                                   , "results"   .= qr_results
                                   , "fMeasure"  .= showDbl (fMeasure qr_fMeasure)
                                   , "precision" .= showDbl (precision qr_fMeasure)
-                                  , "recall"    .= showDbl (recall qr_fMeasure) ]
+                                  , "recall"    .= showDbl (recall qr_fMeasure)
+                                  , "intAvgPrecision" .= qr_intAvgPrecision ]
 
 data TestRun = TestRun {
     tr_test        :: Test

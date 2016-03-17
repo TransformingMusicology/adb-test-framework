@@ -23,7 +23,7 @@
 module AudioDB.Test where
 
 import           AudioDB.Test.Types
-import           AudioDB.Evaluation (evaluate)
+import           AudioDB.Evaluation (evaluate, interpolatedAvgPrecision)
 import           Control.Logging (log', timedLog', warn', errorL', traceL')
 import qualified Data.ByteString.Char8 as BS (putStrLn)
 import           Data.DateTime
@@ -221,10 +221,13 @@ runQuery withEval q = do
       let rankings        = sortBy cmpDistance (extractRankings frameSize results)
           cmpDistance a b = compare (rk_distance a) (rk_distance b)
           fMeasure        = evaluate rankings q
+          intAvgPrecision = interpolatedAvgPrecision rankings q [0.1,0.2..1.0]
 
       return QueryResult { qr_query    = q
                          , qr_results  = rankings
-                         , qr_fMeasure = fMeasure }
+                         , qr_fMeasure = FmPR fMeasure
+                         , qr_intAvgPrecision = map FmPR intAvgPrecision }
+
     withDB Nothing = error $ "Could not open database " ++ dbFileName
 
 extractRankings :: FrameSize -> ADBQueryResults -> [Ranking]
