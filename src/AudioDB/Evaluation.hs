@@ -40,9 +40,9 @@ evaluate returnedResults q@(Query { q_evaluation = MatchDistances }) = (accuracy
 evaluate returnedResults q@(Query { q_evaluation = MatchOrder }) = (accuracy, precision, recall)
   where
     requiredResults = (q_requiredResults q)
-    truePositives   = map fst $ filter (\(rt,rq) -> rt `locEq` rq) $ zip returnedResults requiredResults --FIXME Maybe this is intersectBy?
-    falsePositives  = deleteFirstsBy locEq returnedResults truePositives
-    falseNegatives  = deleteFirstsBy locEq requiredResults truePositives
+    truePositives   = map fst $ filter (\(rt,rq) -> rt `seqEq` rq) $ zip returnedResults requiredResults --FIXME Maybe this is intersectBy?
+    falsePositives  = deleteFirstsBy seqEq returnedResults truePositives
+    falseNegatives  = deleteFirstsBy seqEq requiredResults truePositives
     fracLen         = realToFrac . length
     accuracy        = 0
     precision       = (fracLen truePositives) / ((fracLen truePositives) + (fracLen falsePositives))

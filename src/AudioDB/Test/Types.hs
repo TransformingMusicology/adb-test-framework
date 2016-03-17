@@ -241,8 +241,8 @@ instance Eq Ranking where
       (aDist, aDistThresh) `inMaybeRange` (bDist, bDistThresh) = True
     | otherwise = False
 
-locEq :: Ranking -> Ranking -> Bool
-locEq (Ranking { rk_key = aKey
+seqEq :: Ranking -> Ranking -> Bool
+seqEq (Ranking { rk_key = aKey
                 , rk_start = aStart
                 , rk_startThresh = aStartThresh
                 , rk_length = aLen
