@@ -222,7 +222,7 @@ runQuery withEval q = do
           cmpDistance a b = compare (rk_distance a) (rk_distance b)
           fMeasure        = evaluate rankings q
 
-      return QueryResult { qr_query_id = q_identifier q
+      return QueryResult { qr_query    = q
                          , qr_results  = rankings
                          , qr_fMeasure = fMeasure }
     withDB Nothing = error $ "Could not open database " ++ dbFileName

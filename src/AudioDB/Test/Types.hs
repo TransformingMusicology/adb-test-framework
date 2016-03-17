@@ -63,6 +63,12 @@ instance FromJSON QueryOpts where
     <*> qo .:? "rotations"         .!= Nothing
   parseJSON _ = error "Could not parse query options."
 
+instance ToJSON QueryOpts where
+  toJSON QueryOpts{..} = object [ "key"    .= qo_key
+                                , "start"  .= qo_start
+                                , "length" .= qo_length
+                                ]
+
 data QueryType = PointQuery
                | TrackQuery
                | SequenceQuery
@@ -136,6 +142,14 @@ instance FromJSON Query where
     <*> q .: "evaluation"
   parseJSON _ = error "Could not parse query."
 
+instance ToJSON Query where
+  toJSON Query{..} = object [ "identifier"      .= q_identifier
+                            , "db"              .= q_db
+                            , "query"           .= q_query
+                            , "specifiedBy"     .= q_specifiedBy
+                            , "requiredResults" .= q_requiredResults
+                            ]
+
 -- FIXME Consider adding things like FMeasure as evaluation types
 data Evaluation = MatchDistances
                 | MatchOrder
@@ -180,6 +194,11 @@ instance FromJSON Database where
                       , db_power       = power }
 
   parseJSON _ = error "Could not parse database specification."
+
+instance ToJSON Database where
+  toJSON Database{..} = object [ "filename" .= db_fileName
+                               , "feature"  .= db_feature
+                               ]
 
 data Ranking = Ranking {
     rk_key          :: Key
@@ -291,12 +310,12 @@ recall (_,_,r) = r
 -- FIXME How can we make this more polymorphic to accommodate
 -- different kinds of Evaluation?
 data QueryResult = QueryResult {
-    qr_query_id :: String
+    qr_query    :: Query
   , qr_results  :: [Ranking]
   , qr_fMeasure :: (Accuracy, Precision, Recall) } deriving (Eq, Show)
 
 instance ToJSON QueryResult where
-  toJSON QueryResult{..} = object [ "query"     .= qr_query_id
+  toJSON QueryResult{..} = object [ "query"     .= qr_query
                                   , "results"   .= qr_results
                                   , "accuracy"  .= showDbl (accuracy qr_fMeasure)
                                   , "precision" .= showDbl (precision qr_fMeasure)
