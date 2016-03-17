@@ -23,7 +23,7 @@
 module AudioDB.Evaluation where
 
 import           AudioDB.Test.Types
-import           Data.List ((\\), intersect, deleteFirstsBy)
+import           Data.List ((\\), intersect, intersectBy, deleteFirstsBy, nubBy)
 
 evaluate :: [Ranking] -> Query -> (Accuracy, Precision, Recall)
 evaluate returnedResults q@(Query { q_evaluation = MatchDistances }) = (accuracy, precision, recall)
@@ -43,6 +43,19 @@ evaluate returnedResults q@(Query { q_evaluation = MatchOrder }) = (accuracy, pr
     truePositives   = map fst $ filter (\(rt,rq) -> rt `seqEq` rq) $ zip returnedResults requiredResults --FIXME Maybe this is intersectBy?
     falsePositives  = deleteFirstsBy seqEq returnedResults truePositives
     falseNegatives  = deleteFirstsBy seqEq requiredResults truePositives
+    fracLen         = realToFrac . length
+    accuracy        = 0
+    precision       = (fracLen truePositives) / ((fracLen truePositives) + (fracLen falsePositives))
+    recall          = (fracLen truePositives) / ((fracLen falseNegatives) + (fracLen truePositives))
+
+evaluate returnedResults q@(Query { q_evaluation = MatchLocations }) = (accuracy, precision, recall)
+  where
+    requiredResults = nubBy startEq (q_requiredResults q)
+    retResults      = nubBy startEq returnedResults
+    truePositives   = intersectBy startEq retResults requiredResults
+    falsePositives  = deleteFirstsBy startEq retResults truePositives
+    falseNegatives  = deleteFirstsBy startEq requiredResults truePositives
+
     fracLen         = realToFrac . length
     accuracy        = 0
     precision       = (fracLen truePositives) / ((fracLen truePositives) + (fracLen falsePositives))

@@ -6,6 +6,7 @@ import AudioDB.Test
 import AudioDB.Test.Types hiding (Test)
 import AudioDB.Evaluation
 import Control.Logging (withStderrLogging)
+import Data.List (permutations)
 
 testInMaybeRange :: TestInstance
 testInMaybeRange = TestInstance {
@@ -187,6 +188,30 @@ testMatchOrderPrecision10 = TestInstance {
                        then Pass
                        else Fail $ "Precision 1.0 mismatch: expected: " ++ (show requiredPrecision) ++ "; computed: " ++ (show computedPrecision)
 
+testMatchLocationsPrecision10 :: TestInstance
+testMatchLocationsPrecision10 = TestInstance {
+    run = return $ checkPrecision
+  , name = "MatchLocations precision 1.0"
+  , tags = []
+  , options = []
+  , setOption = \_ _ -> Right testMatchLocationsPrecision10
+  }
+  where
+    requiredResults = [track1_start0_dist0, track1_start1_dist0, track1_start2_dist01, track1_start3_dist05, track1_start4_dist10]
+    returnedResults = reverse $ concat $ permutations requiredResults -- i.e., ordering and duplication in results do not affect this
+    requiredPrecision = 1.0
+    (_, computedPrecision, _) = evaluate returnedResults query
+    query = Query { q_identifier      = "TestMatchLocationsPrecision10"
+                  , q_db              = dummyDB
+                  , q_query           = dummyQueryOpts
+                  , q_specifiedBy     = "Tester"
+                  , q_requiredResults = requiredResults
+                  , q_evaluation      = MatchLocations }
+    checkPrecision = Finished $
+                       if computedPrecision == requiredPrecision
+                       then Pass
+                       else Fail $ "Precision 1.0 mismatch: expected: " ++ (show requiredPrecision) ++ "; computed: " ++ (show computedPrecision)
+
 testMatchDistancesPrecisionAllDifferent :: TestInstance
 testMatchDistancesPrecisionAllDifferent = TestInstance {
     run = return $ checkPrecision
@@ -313,6 +338,7 @@ tests = withStderrLogging $
                  , Test testRankingCmp
                  , Test testMatchDistancesPrecision10
                  , Test testMatchOrderPrecision10
+                 , Test testMatchLocationsPrecision10
                  , Test testMatchDistancesPrecisionAllDifferent
                  , Test testMatchOrderPrecisionAllMisplaced
                  , Test testMatchDistancesPrecisionOneDifferentHead

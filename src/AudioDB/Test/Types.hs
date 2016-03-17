@@ -153,11 +153,13 @@ instance ToJSON Query where
 -- FIXME Consider adding things like FMeasure as evaluation types
 data Evaluation = MatchDistances
                 | MatchOrder
+                | MatchLocations
                 deriving (Eq, Show)
 
 instance FromJSON Evaluation where
   parseJSON (String "distance") = pure MatchDistances
   parseJSON (String "order")    = pure MatchOrder
+  parseJSON (String "location") = pure MatchLocations
   parseJSON e = error $ "Invalid evaluation type value: " ++ (show e)
 
 data Database = Database {
@@ -255,6 +257,17 @@ seqEq (Ranking { rk_key = aKey
     | aKey /= bKey = False
     | (aStart, aStartThresh) `inMaybeRange` (bStart, bStartThresh) &&
       (aLen, aLenThresh) `maybeInMaybeRange` (bLen, bLenThresh) = True
+    | otherwise = False
+
+startEq :: Ranking -> Ranking -> Bool
+startEq (Ranking { rk_key = aKey
+                 , rk_start = aStart
+                 , rk_startThresh = aStartThresh})
+    (Ranking { rk_key = bKey
+             , rk_start = bStart
+             , rk_startThresh = bStartThresh})
+    | aKey /= bKey = False
+    | (aStart, aStartThresh) `inMaybeRange` (bStart, bStartThresh) = True
     | otherwise = False
 
 instance Ord Ranking where
