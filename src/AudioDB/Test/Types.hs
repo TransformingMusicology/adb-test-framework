@@ -39,6 +39,7 @@ data QueryOpts = QueryOpts {
   , qo_pointNN           :: Int
   , qo_radius            :: Double
   , qo_resultLen         :: Int
+  , qo_maxDistance       :: Maybe Double
   , qo_sequenceHop       :: Seconds
   , qo_absoluteThreshold :: Maybe Double
   , qo_relativeThreshold :: Maybe Double
@@ -55,6 +56,7 @@ instance FromJSON QueryOpts where
     <*> qo .:? "pointNN"           .!= 10
     <*> qo .:? "radius"            .!= 1.0
     <*> qo .:? "count"             .!= 10
+    <*> qo .:? "maxDistance"       .!= Nothing
     <*> qo .:? "sequenceHop"       .!= 1
     <*> qo .:? "absoluteThreshold" .!= Nothing
     <*> qo .:? "relativeThreshold" .!= Nothing

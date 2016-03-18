@@ -75,6 +75,7 @@ dummyQueryOpts = QueryOpts {
   , qo_pointNN           = 0
   , qo_radius            = 0.0
   , qo_resultLen         = 0
+  , qo_maxDistance       = Nothing
   , qo_sequenceHop       = 0.0
   , qo_absoluteThreshold = Nothing
   , qo_relativeThreshold = Nothing

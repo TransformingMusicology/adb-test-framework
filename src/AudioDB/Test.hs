@@ -218,7 +218,7 @@ runQuery withEval q = do
 
       results <- withMaybeDatumIO adb key (queryForDatum adb)
 
-      let rankings        = sortBy cmpDistance (extractRankings frameSize results)
+      let rankings        = sortBy cmpDistance (extractRankings frameSize (qo_maxDistance . q_query $ q) results)
           cmpDistance a b = compare (rk_distance a) (rk_distance b)
           fMeasure        = evaluate rankings q
           intAvgPrecision = interpolatedAvgPrecision rankings q [0.1,0.2..1.0]
@@ -230,8 +230,9 @@ runQuery withEval q = do
 
     withDB Nothing = error $ "Could not open database " ++ dbFileName
 
-extractRankings :: FrameSize -> ADBQueryResults -> [Ranking]
-extractRankings framesToSecs r = map resToRank (query_results_results r)
+extractRankings :: FrameSize -> Maybe Double -> ADBQueryResults -> [Ranking]
+extractRankings framesToSecs Nothing r =
+  map resToRank (query_results_results r)
   where
     resToRank (ADBResult { result_ikey = key, result_ipos = pos, result_dist = dist }) =
       Ranking { rk_key = key
@@ -241,6 +242,9 @@ extractRankings framesToSecs r = map resToRank (query_results_results r)
               , rk_distThresh = Nothing
               , rk_startThresh = Nothing
               , rk_lengthThresh = Nothing }
+
+extractRankings framesToSecs (Just maxDist) r =
+  filter (\r -> rk_distance r <= maxDist) $ extractRankings framesToSecs Nothing r
 
 showRun :: TestRun -> IO ()
 showRun = putStrLn . show

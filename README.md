@@ -96,6 +96,8 @@ The query is specified with the following properties:
   <dd>(optional) For radius searches; purpose unknown to author at time of writing <code>;-)</code></dd>
   <dt>resultLen</dt>
   <dd>How many tracks should be included in the results?</dd>
+  <dt>maxDistance</dt>
+  <dd>(optional) Exclude results above this distance</dd>
   <dt>sequenceHop</dt>
   <dd>(optional) When executing a <strong><code>sequence</code></strong>- or <strong><code>nsequence</code></strong>-type query, skip forward by this number of seconds between each comparison in the target tracks. A sensible value is the length of the search sequence which then results in contiguous (and non-overlapping) comparisons.</dd>
   <dt>absoluteThreshold</dt>
