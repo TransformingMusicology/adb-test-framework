@@ -54,7 +54,7 @@ Each query has the properties:
   <dd>The query that will be executed.</dd>
   <dt>specifiedBy</dt>
   <dd>The name of the entity who specified the query (e.g. a person).</dd>
-  <dt>evlaution</dt>
+  <dt>evaluation</dt>
   <dd>The method that will be used to evaluate the results against the required results: <strong><code>distance</code></strong>: requires that the distances of each result are within some given threshold of the required results; <strong><code>order</code></strong>: requires that the results are in the same order as the required results (but disregards the actual distances).</dd>
   <dt>requiredResults</dt>
   <dd>A list of results that are expected for the query.</dd>
@@ -104,7 +104,7 @@ The query is specified with the following properties:
   <dd>(optional) When power features are included, disregard any result sequences whose power values (i.e. loudness) are below this threshold; in dB, encoded as a double.</dd>
   <dt>relativeThreshold</dt>
   <dd>(optional) When power features are included, only consider sequences as matches if their power values (i.e. loudness) is equal to this value; in dB, encoded as a double.</dd>
-  <dt>unit-norming</dt>
+  <dt>unitNorming</dt>
   <dd>(optional) Use unit norming (true|false)</dd>
   <dt>distance</dt>
   <dd>The distance measure to be used. One of: <strong><code>dot-product</code></strong>; <strong><code>euclidean-normed</code></strong>; <strong><code>euclidean</code></strong>; <strong><code>kullback</code></strong>.</dd>
@@ -136,7 +136,7 @@ The required results are specified as a list of objects with each having the fol
 ### Executing the test
 
 The build process creates an executable called `adbtest`. Run this
-with the `-c-` (or `--config`) option followed by the filename of your
+with the `-c` (or `--config`) option followed by the filename of your
 test configuration. You can optionally use the `-n` (or `--dry-run`)
 option to prevent actually executing the test and just check that the
 configuration file is correct.
